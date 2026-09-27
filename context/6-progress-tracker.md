@@ -21,11 +21,11 @@ Update this file after every meaningful implementation change.
 * Original local demo scaffold: Next.js/Tailwind setup, local dish data, scan/match/ask-cook route handlers, and initial additive-schema attempt.
 
 ## In Progress
-* Units 7-12 implementation added: profile-aware flags, history endpoints, profile management, scan route, and history page. Full verification remains deferred as requested.
+* Unit 13 design pass added: shared navigation, consistent visual language, loading states, focus states, and polished empty/authenticated states. Full verification remains deferred as requested.
 
 ## Next Up
 * Unit 3: finish manual Auth verification.
-* Review Units 5-12 together: provider fallback, authenticated scans, matching/questions, RLS-scoped history, profile updates, and the complete scan/history UI flow.
+* Review Units 5-13 together: provider fallback, authenticated scans, matching/questions, RLS-scoped history, profile updates, complete scan/history UI flow, and cross-page design consistency.
 * Units 6 and 9: connect authenticated scan persistence and add history endpoints.
 * Units 10-13: add the home, profile, scan, history routes and reconcile the visual system.
 

@@ -28,6 +28,10 @@ Never expose `SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY`, or `GROQ_API_KEY` to
 
 `POST /api/match` remains a pure local matcher, and `POST /api/ask-cook` produces one question per flag. The scan endpoint now accepts the authenticated profile's allergen list and stores the returned flags with the scan. `GET /api/history` lists the current user's scans in reverse chronological order. `DELETE /api/history/:id` deletes only the current user's row; RLS remains the database-level boundary. Authenticated UI routes now include `/scan`, `/history`, and `/profile`; `/profile` reads and updates `allergy_profiles` with the browser-safe Supabase client.
 
+## Unit 13 design pass
+
+All seven routes share the PetitScan visual language: moss, lime, cream, and coral palette; responsive spacing; shared authenticated navigation; keyboard focus states; hover transitions; loading states; and a dedicated empty history state. `/scan` announces “Identifying dish…” followed by “Checking ingredients…”.
+
 ## `POST /api/scan`
 Multipart form data: `image` (file), optional `dish` (demo dish name). Returns `{ dishName, source, ingredients }`, where `source` is `cache` or `llm_fallback`.
 
