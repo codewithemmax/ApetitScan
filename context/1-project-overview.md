@@ -1,6 +1,6 @@
 # Project Overview
 
-[App Name TBD] identifies a photographed Nigerian dish and flags which of the user's known allergens are commonly, sometimes, or not typically found in that dish, then generates a plain-language question the user can ask whoever cooked it.
+PetitScan identifies a photographed Nigerian dish and flags which of the user's known allergens are commonly, sometimes, or not typically found in that dish, then generates a plain-language question the user can ask whoever cooked it.
 
 North star: one photo, one dish, a clear set of questions worth asking before eating something that could hurt someone.
 
@@ -12,11 +12,13 @@ Existing food-allergen apps (Yuka, Intol, EatSafe, and similar) all read a barco
 * Secondary: hackathon judges evaluating problem fit and technical execution for the Access & Inclusion track.
 
 ## Core User Flow
-1. Select or create an allergy profile (fixed demo profiles for the hackathon, no full auth required).
-2. Photograph the dish.
-3. App identifies the dish: checks `dish_cache` first, falls back to live LLM reasoning if not found.
-4. Flagged allergens are shown, tiered (always / commonly / sometimes) and labeled by source (Verified / Estimated).
-5. Each flag comes with a plain-language question to ask the cook.
+1. Sign up or log in (Supabase Auth, email + password). This is a real multi-page app: landing, signup, login, home, scan, history, profile are separate routes.
+2. Set up an allergy profile.
+3. Photograph the dish.
+4. App identifies the dish: checks `dish_cache` first, falls back to live LLM reasoning if not found.
+5. Flagged allergens are shown, tiered (always / commonly / sometimes) and labeled by source (Verified / Estimated).
+6. Each flag comes with a plain-language question to ask the cook.
+7. The scan is saved to the user's history automatically, viewable and revisitable from `/history`.
 
 ## What This App Must NOT Claim
 * That a dish "is safe" or "does not contain" an allergen, ever. Absence in the cache is not proof of absence in a specific plate.
@@ -28,14 +30,15 @@ Existing food-allergen apps (Yuka, Intol, EatSafe, and similar) all read a barco
 * Teammate(s): TBD, update this section once confirmed.
 
 ## Scope for Hackathon Submission (Borderless Bytes, deadline September 28, 2026, 11:59 PM WAT)
+* Real signup and login (Supabase Auth), not a hardcoded demo profile switcher.
+* Persistent scan history per user, stored and retrievable.
 * At least 3-5 dishes hand-verified and present in `dish_cache`, with real, checked ingredient/allergen data.
 * Live demo works end-to-end only on cached, verified dishes.
 * LLM fallback exists, is tested privately, and is discussed in the pitch as the path to covering "any Nigerian dish," but is not relied on live.
 * Allergen flagging, tiering, and the "ask the cook" question generator all work.
-* Mobile-usable, single clear flow, no login friction for the demo.
+* Mobile-usable, polished, multi-page flow: landing, signup, login, home, scan, history, profile.
 
 ## Out of Scope for Hackathon Submission
-* Full user accounts / authentication.
 * Cuisines outside Nigeria (Kenya, Uganda, Ghana explicitly deferred, even though the hackathon spans all four countries).
 * Payments, monetization, or any commerce feature.
 * Any feature that reads as a medical or diagnostic claim.

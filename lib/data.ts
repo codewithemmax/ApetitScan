@@ -6,11 +6,12 @@ export const profiles: AllergyProfile[] = [
 ];
 export const dishes: Dish[] = [
   { dishName: "Egusi soup", verified: true, ingredients: [
-    { ingredient: "ground egusi (melon seed)", tier: "always", allergenCategory: "seed" },
-    { ingredient: "palm oil", tier: "always", allergenCategory: "none" },
+    { ingredient: "ground egusi (melon seed)", tier: "always", allergenCategory: "none" },
+    { ingredient: "palm oil", tier: "commonly", allergenCategory: "none" },
     { ingredient: "leafy greens", tier: "commonly", allergenCategory: "none" },
-    { ingredient: "crayfish or dried shrimp", tier: "commonly", allergenCategory: "shellfish", regionalNote: "Some cooks use crayfish; others leave it out." },
-    { ingredient: "peanut or groundnut", tier: "sometimes", allergenCategory: "peanut", regionalNote: "Ask whether groundnut was added to thicken or deepen the soup." }
+    { ingredient: "crayfish or dried shrimp", tier: "sometimes", allergenCategory: "shellfish", regionalNote: "Common in many versions, but the cook may use another stock or leave it out." },
+    { ingredient: "stockfish or dried fish", tier: "sometimes", allergenCategory: "none", regionalNote: "Fish choices vary by household and region." },
+    { ingredient: "seasoning or bouillon", tier: "sometimes", allergenCategory: "none", regionalNote: "Brand and recipe vary; ask the cook which seasoning was used." }
   ] },
   { dishName: "Jollof rice", verified: true, ingredients: [
     { ingredient: "rice", tier: "always", allergenCategory: "none" }, { ingredient: "tomato and pepper base", tier: "always", allergenCategory: "none" },

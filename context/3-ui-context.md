@@ -3,7 +3,7 @@
 This file covers the words, labels, and claims the API and frontend are allowed to produce. Since this is a single-repo, full-stack build, these rules bind both the API responses and the components that render them, they are not split by role.
 
 ## Core Public Language
-"[App Name TBD] flags what's commonly in a dish, and gives you the question to ask before you eat it."
+"PetitScan flags what's commonly in a dish, and gives you the question to ask before you eat it."
 
 ## Approved Status Vocabulary
 Use these terms, and only these, for scan results:

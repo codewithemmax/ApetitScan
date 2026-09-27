@@ -1,0 +1,3 @@
+import Link from "next/link";
+import { AuthForm } from "../../components/AuthForm";
+export default function LoginPage() { return <main className="min-h-screen px-5 py-10"><div className="mx-auto max-w-md"><Link href="/" className="font-black">Petit<span className="text-moss">Scan</span></Link><div className="mt-16 rounded-[2rem] bg-white p-6 shadow-sm md:p-8"><p className="text-sm font-bold uppercase tracking-[.18em] text-coral">Welcome back</p><h1 className="mt-3 text-3xl font-black">Log in to PetitScan</h1><AuthForm mode="login" /><p className="mt-6 text-center text-sm text-ink/60">New here? <Link href="/signup" className="font-bold text-moss">Create an account</Link></p></div></div></main>; }

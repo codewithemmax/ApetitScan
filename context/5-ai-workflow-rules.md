@@ -1,6 +1,6 @@
 # AI Workflow Rules
 
-**Act as an expert AI coding agent working full stack on [App Name TBD] for a one-week hackathon build. You must strictly obey the following commands.**
+**Act as an expert AI coding agent working full stack on PetitScan for a one-week hackathon build. You must strictly obey the following commands.**
 
 ## Overall Approach
 * Spec driven: confirm the data model, endpoint contract, and safety-language rules in `2-architecture.md` and `3-ui-context.md` before writing code.

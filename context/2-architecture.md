@@ -20,14 +20,16 @@ Everything above is zero-dollar. No card on file anywhere in this stack.
 
 ## Data Model (Required)
 
-**users**
-* id (uuid, pk)
-* name
+**Auth is handled by Supabase's built-in `auth.users` table. No separate `users` table is created, avoid duplicating what Supabase Auth already owns.**
+
+**profiles** (one row per authenticated user, extends `auth.users`)
+* id (uuid, pk, matches `auth.users.id`)
+* display_name (text)
 * created_at
 
 **allergy_profiles**
 * id (uuid, pk)
-* user_id (fk -> users.id)
+* user_id (fk -> auth.users.id, matches `auth.uid()`)
 * allergen (text: e.g. "peanut", "shellfish", "dairy", "egg", "gluten")
 
 **dish_cache**
@@ -45,20 +47,34 @@ Everything above is zero-dollar. No card on file anywhere in this stack.
 
 **scans**
 * id (uuid, pk)
-* user_id (fk -> users.id)
+* user_id (fk -> auth.users.id, matches `auth.uid()`)
 * image_url (text)
 * matched_dish (text, nullable)
+* flags (jsonb: the tiered allergen flags returned for this scan, stored so history doesn't need to re-run matching)
 * source (text: "cache" | "llm_fallback")
 * created_at
 
 ## Required Endpoints
-* `POST /api/scan` — image in, dish identification and ingredients out, `source` field set.
+* `POST /api/scan` — image in, dish identification and ingredients out, `source` field set, writes a row to `scans` for the authenticated user.
 * `POST /api/match` — dish ingredients plus a user's allergy profile in, tiered flags out. Pure function, no external calls.
 * `POST /api/ask-cook` — flagged ingredients in, one plain-language question per flag out.
+* `GET /api/history` — returns the authenticated user's past scans, most recent first, including dish name, flags, source, and timestamp.
+* `DELETE /api/history/:id` — deletes one scan row, owned by the authenticated user only.
+
+## Pages (Frontend Routes)
+* `/signup` — Supabase Auth signup, email + password.
+* `/login` — Supabase Auth login.
+* `/` (post-login home) — profile summary and a primary "scan a dish" action.
+* `/scan` — photo capture and result flow.
+* `/history` — list of past scans, tap through to see the full result again.
+* `/profile` — manage the user's allergen list.
+This is a real multi-page app, not a single-page flow. Route protection redirects unauthenticated visits to `/login`.
 
 ## Auth / Access Model
-* No full authentication for the hackathon build. A fixed local list of demo profiles the user switches between.
-* If real auth is added post-hackathon, it follows the Supabase JWT pattern: owner endpoints validate ownership against the authenticated user.
+* Real authentication via Supabase Auth, email + password. Signup and login are full pages, not a modal bolted onto the scan flow.
+* `allergy_profiles` and `scans` are both scoped to `auth.uid()`. Every query for either table filters by the authenticated user, enforced with Postgres Row Level Security policies, not just application-layer checks.
+* A logged-out user can see the landing/login/signup pages only. Everything else requires a session.
+* Session handling uses Supabase's client SDK session, refreshed automatically, no custom token logic needed.
 
 ## AI / Background Task Model
 * `POST /api/scan` calls Gemini first. On a rate-limit or error response, retries the same request against Groq before failing.
@@ -73,3 +89,4 @@ Everything above is zero-dollar. No card on file anywhere in this stack.
 5. Migrations are additive only. Never delete or destroy existing data.
 6. No API keys (Gemini, Groq, Supabase service role) in client-side code, only the two `NEXT_PUBLIC_*` Supabase values are allowed in the browser bundle.
 7. Live demo photos come only from `dish_cache` rows with `verified: true`.
+8. `allergy_profiles` and `scans` are protected by Postgres Row Level Security keyed to `auth.uid()`. A user must never be able to read or delete another user's rows, at the database level, not only in application code.
