@@ -21,11 +21,11 @@ Update this file after every meaningful implementation change.
 * Original local demo scaffold: Next.js/Tailwind setup, local dish data, scan/match/ask-cook route handlers, and initial additive-schema attempt.
 
 ## In Progress
-* Unit 13 design pass added: shared navigation, consistent visual language, loading states, focus states, and polished empty/authenticated states. Full verification remains deferred as requested.
+* Units 14-15 added two more verified dishes and completed the source/safety/security audit pass. Supabase seed application and live cross-user tests remain manual.
 
 ## Next Up
 * Unit 3: finish manual Auth verification.
-* Review Units 5-13 together: provider fallback, authenticated scans, matching/questions, RLS-scoped history, profile updates, complete scan/history UI flow, and cross-page design consistency.
+* Apply the Unit 14 seed migration and review Units 5-15 together, including provider fallback, authenticated scans, matching/questions, RLS-scoped history, profile updates, complete scan/history UI flow, dish coverage, and safety/security checks.
 * Units 6 and 9: connect authenticated scan persistence and add history endpoints.
 * Units 10-13: add the home, profile, scan, history routes and reconcile the visual system.
 

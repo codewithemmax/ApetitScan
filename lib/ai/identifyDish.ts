@@ -57,13 +57,13 @@ function required(name: "GEMINI_API_KEY" | "GROQ_API_KEY"): string {
 }
 
 async function identifyWithGemini(image: ImageInput): Promise<Omit<IdentifiedDish, "source">> {
-  const model = process.env.GEMINI_MODEL ?? "gemini-2.0-flash";
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${required("GEMINI_API_KEY")}`, {
+  const model = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ contents: [{ parts: [{ text: instruction }, { inline_data: { mime_type: image.mimeType, data: image.base64 } }] }], generationConfig: { responseMimeType: "application/json" } }),
+    headers: { "Content-Type": "application/json", "x-goog-api-key": required("GEMINI_API_KEY") },
+    body: JSON.stringify({ contents: [{ parts: [{ text: instruction }, { inlineData: { mimeType: image.mimeType, data: image.base64 } }] }], generationConfig: { responseMimeType: "application/json" } }),
   });
-  if (!response.ok) throw new Error(`Gemini returned ${response.status}.`);
+  if (!response.ok) throw new Error(`Gemini returned ${response.status}: ${(await response.text()).slice(0, 240)}`);
   const payload = await response.json() as unknown;
   if (!isRecord(payload)) throw new Error("Gemini returned an invalid response.");
   const candidates = Array.isArray(payload.candidates) ? payload.candidates : [];
@@ -75,13 +75,13 @@ async function identifyWithGemini(image: ImageInput): Promise<Omit<IdentifiedDis
 }
 
 async function identifyWithGroq(image: ImageInput): Promise<Omit<IdentifiedDish, "source">> {
-  const model = process.env.GROQ_MODEL ?? "meta-llama/llama-4-scout-17b-16e-instruct";
+  const model = process.env.GROQ_MODEL ?? "qwen/qwen3.8-27b";
   const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${required("GROQ_API_KEY")}` },
     body: JSON.stringify({ model, temperature: 0, response_format: { type: "json_object" }, messages: [{ role: "user", content: [{ type: "text", text: instruction }, { type: "image_url", image_url: { url: `data:${image.mimeType};base64,${image.base64}` } }] }] }),
   });
-  if (!response.ok) throw new Error(`Groq returned ${response.status}.`);
+  if (!response.ok) throw new Error(`Groq returned ${response.status}: ${(await response.text()).slice(0, 240)}`);
   const payload = await response.json() as unknown;
   if (!isRecord(payload) || !Array.isArray(payload.choices)) throw new Error("Groq returned an invalid response.");
   const first = payload.choices[0];

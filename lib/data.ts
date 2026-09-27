@@ -14,12 +14,14 @@ export const dishes: Dish[] = [
     { ingredient: "seasoning or bouillon", tier: "sometimes", allergenCategory: "none", regionalNote: "Brand and recipe vary; ask the cook which seasoning was used." }
   ] },
   { dishName: "Jollof rice", verified: true, ingredients: [
-    { ingredient: "rice", tier: "always", allergenCategory: "none" }, { ingredient: "tomato and pepper base", tier: "always", allergenCategory: "none" },
-    { ingredient: "stock cube", tier: "commonly", allergenCategory: "dairy", regionalNote: "Brand and recipe vary; ask which stock was used." }, { ingredient: "egg garnish", tier: "sometimes", allergenCategory: "egg" }
+    { ingredient: "long-grain parboiled rice", tier: "always", allergenCategory: "none" }, { ingredient: "tomato and red pepper stew", tier: "always", allergenCategory: "none" },
+    { ingredient: "cooking oil", tier: "commonly", allergenCategory: "none", regionalNote: "Oil type and quantity vary between home and party recipes." }, { ingredient: "onion and seasoning", tier: "commonly", allergenCategory: "none" },
+    { ingredient: "broth or bouillon", tier: "sometimes", allergenCategory: "none", regionalNote: "Some recipes use broth or bouillon; others season with water and spices." }
   ] },
   { dishName: "Moin moin", verified: true, ingredients: [
-    { ingredient: "blended beans", tier: "always", allergenCategory: "none" }, { ingredient: "palm oil", tier: "commonly", allergenCategory: "none" },
-    { ingredient: "boiled egg", tier: "sometimes", allergenCategory: "egg", regionalNote: "Egg is a common filling, but not used in every batch." }, { ingredient: "crayfish", tier: "sometimes", allergenCategory: "shellfish" }
+    { ingredient: "steamed blended beans", tier: "always", allergenCategory: "none" }, { ingredient: "pepper and onion", tier: "commonly", allergenCategory: "none" },
+    { ingredient: "vegetable oil", tier: "commonly", allergenCategory: "none" }, { ingredient: "crayfish or dried shrimp", tier: "sometimes", allergenCategory: "shellfish", regionalNote: "A common enrichment in many versions, but not used in every batch." },
+    { ingredient: "boiled egg filling", tier: "sometimes", allergenCategory: "egg", regionalNote: "Egg is a frequent filling, but other batches use fish, meat, or no filling." }
   ] }
 ];
 export function findDish(name: string): Dish | undefined { return dishes.find((dish) => dish.dishName.toLowerCase() === name.toLowerCase()); }

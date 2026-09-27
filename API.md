@@ -18,7 +18,7 @@ Never expose `SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY`, or `GROQ_API_KEY` to
 
 ## Unit 5 AI wrapper
 
-`lib/ai/identifyDish.ts` exposes `identifyDish(image)`. It calls Gemini first using the server-only `GEMINI_API_KEY`; any provider error or invalid response triggers the same request shape against Groq using `GROQ_API_KEY`. The caller receives structured ingredients and `source: "llm_fallback"`; provider keys never enter client code. Set `GEMINI_MODEL` and `GROQ_MODEL` in `.env.local` to override the defaults.
+`lib/ai/identifyDish.ts` exposes `identifyDish(image)`. It calls Gemini first using the server-only `GEMINI_API_KEY`; any provider error or invalid response triggers the same request shape against Groq using `GROQ_API_KEY`. The caller receives structured ingredients and `source: "llm_fallback"`; provider keys never enter client code. Defaults are `gemini-2.5-flash` and `qwen/qwen3.8-27b`; set `GEMINI_MODEL` and `GROQ_MODEL` in `.env.local` to override them.
 
 ## Unit 6 scan endpoint
 
@@ -31,6 +31,10 @@ Never expose `SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY`, or `GROQ_API_KEY` to
 ## Unit 13 design pass
 
 All seven routes share the PetitScan visual language: moss, lime, cream, and coral palette; responsive spacing; shared authenticated navigation; keyboard focus states; hover transitions; loading states; and a dedicated empty history state. `/scan` announces “Identifying dish…” followed by “Checking ingredients…”.
+
+## Units 14-15 verified dishes and security pass
+
+`supabase/migrations/202609270004_seed_jollof_moin_moin.sql` adds hand-reviewed, verified records for Jollof rice and Moin Moin. The Jollof data was cross-checked against [Food Network Kitchen](https://www.foodnetwork.com/recipes/food-network-kitchen/nigerian-jollof-rice-19493519) and [Nigerian Food TV](https://www.nigerianfoodtv.com/jollof-rice-how-to-cook-nigerian-jollof/). The Moin Moin data was cross-checked against [Nigerian Food TV](https://www.nigerianfoodtv.com/nigerian-moi-moi-how-to-make-nigerian/), [Lounje](https://lounje.ng/recipes/cookbook-002), and [Koki Afrique](https://kokiafrique.com/en/dishes/moi-moi/). Unit 15 audits safety language, server-only keys, fallback cache boundaries, and RLS assumptions.
 
 ## `POST /api/scan`
 Multipart form data: `image` (file), optional `dish` (demo dish name). Returns `{ dishName, source, ingredients }`, where `source` is `cache` or `llm_fallback`.
