@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { identifyDish, type ImageInput } from "../../../lib/ai/identifyDish";
 import { createClient } from "../../../lib/supabase/server";
 import type { DishIngredient } from "../../../lib/types";
+import { matchIngredients } from "../../../lib/services/match";
 
 interface CachedIngredient {
   ingredient: string;
@@ -50,6 +51,14 @@ export async function POST(request: Request) {
     let dishName: string;
     let ingredients: DishIngredient[];
     let source: "cache" | "llm_fallback";
+    const rawAllergens = form.get("allergens");
+    let allergens: string[] = [];
+    if (typeof rawAllergens === "string") {
+      try {
+        const parsed = JSON.parse(rawAllergens) as unknown;
+        if (Array.isArray(parsed)) allergens = parsed.filter((item): item is string => typeof item === "string");
+      } catch { /* Matching is optional for callers that only need identification. */ }
+    }
 
     const { data: cacheData, error: cacheError } = typeof selectedDish === "string" && selectedDish && !selectedDish.includes("Estimated")
       ? await supabase.from("dish_cache").select("dish_name, verified, dish_ingredients(ingredient, tier, allergen_category, regional_note)").eq("dish_name", selectedDish).eq("verified", true).maybeSingle()
@@ -72,19 +81,20 @@ export async function POST(request: Request) {
     }
 
     const imageUrl = form.get("imageUrl");
-    const { error: scanError } = await supabase.from("scans").insert({
+    const flags = matchIngredients(ingredients, allergens);
+    const { data: savedScan, error: scanError } = await supabase.from("scans").insert({
       user_id: user.id,
       image_url: typeof imageUrl === "string" && imageUrl ? imageUrl : null,
       matched_dish: dishName,
-      flags: [],
+      flags,
       source,
-    });
+    }).select("id").single();
     if (scanError) {
       console.error("scan history insert failed", scanError);
       return NextResponse.json({ error: "The dish was identified, but we could not save this scan." }, { status: 500 });
     }
 
-    return NextResponse.json({ dishName, ingredients, source });
+    return NextResponse.json({ scanId: savedScan?.id, dishName, ingredients, source, flags });
   } catch (error) {
     console.error("scan failed", error);
     return NextResponse.json({ error: "We could not identify that dish. Please try again." }, { status: 400 });

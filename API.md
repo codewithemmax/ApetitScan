@@ -22,7 +22,11 @@ Never expose `SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY`, or `GROQ_API_KEY` to
 
 ## Unit 6 scan endpoint
 
-`POST /api/scan` requires a Supabase Auth session and multipart `image`. An optional `dish` field is used by the verified demo flow to look up `dish_cache`; only `verified = true` rows are eligible for a cache hit. Cache hits skip both AI providers. Cache misses call `identifyDish`, return `source: "llm_fallback"`, and never write the result into `dish_cache`. Every successful scan inserts an owned `scans` row. The `flags` value is initialized as an empty JSON array until Unit 7 matching supplies the user-specific flags.
+`POST /api/scan` requires a Supabase Auth session and multipart `image`. An optional `dish` field is used by the verified demo flow to look up `dish_cache`; only `verified = true` rows are eligible for a cache hit. Cache hits skip both AI providers. Cache misses call `identifyDish`, return `source: "llm_fallback"`, and never write the result into `dish_cache`. Every successful scan inserts an owned `scans` row with the profile-specific matched flags.
+
+## Units 7-12 matching, history, profile, and pages
+
+`POST /api/match` remains a pure local matcher, and `POST /api/ask-cook` produces one question per flag. The scan endpoint now accepts the authenticated profile's allergen list and stores the returned flags with the scan. `GET /api/history` lists the current user's scans in reverse chronological order. `DELETE /api/history/:id` deletes only the current user's row; RLS remains the database-level boundary. Authenticated UI routes now include `/scan`, `/history`, and `/profile`; `/profile` reads and updates `allergy_profiles` with the browser-safe Supabase client.
 
 ## `POST /api/scan`
 Multipart form data: `image` (file), optional `dish` (demo dish name). Returns `{ dishName, source, ingredients }`, where `source` is `cache` or `llm_fallback`.

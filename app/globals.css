@@ -4,3 +4,6 @@
 * { box-sizing: border-box; }
 body { margin: 0; background: #f8f5ed; color: #24312c; font-family: Arial, sans-serif; }
 button, input, select { font: inherit; }
+html { scroll-behavior: smooth; }
+::selection { background: #d9ef83; color: #24312c; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #ef866d; outline-offset: 3px; }

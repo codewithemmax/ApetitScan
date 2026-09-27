@@ -21,12 +21,11 @@ Update this file after every meaningful implementation change.
 * Original local demo scaffold: Next.js/Tailwind setup, local dish data, scan/match/ask-cook route handlers, and initial additive-schema attempt.
 
 ## In Progress
-* Unit 6 authenticated scan endpoint added; cache, AI fallback, and scan-history verification remain manual.
+* Units 7-12 implementation added: profile-aware flags, history endpoints, profile management, scan route, and history page. Full verification remains deferred as requested.
 
 ## Next Up
 * Unit 3: finish manual Auth verification.
-* Unit 5: force a Gemini failure and verify Groq returns a structured result.
-* Unit 6: verify authenticated cache hit, cache miss fallback, and one owned `scans` row, then proceed to Unit 7.
+* Review Units 5-12 together: provider fallback, authenticated scans, matching/questions, RLS-scoped history, profile updates, and the complete scan/history UI flow.
 * Units 6 and 9: connect authenticated scan persistence and add history endpoints.
 * Units 10-13: add the home, profile, scan, history routes and reconcile the visual system.
 
