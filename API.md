@@ -36,6 +36,8 @@ All seven routes share the PetitScan visual language: moss, lime, cream, and cor
 
 `supabase/migrations/202609270004_seed_jollof_moin_moin.sql` adds hand-reviewed, verified records for Jollof rice and Moin Moin. The Jollof data was cross-checked against [Food Network Kitchen](https://www.foodnetwork.com/recipes/food-network-kitchen/nigerian-jollof-rice-19493519) and [Nigerian Food TV](https://www.nigerianfoodtv.com/jollof-rice-how-to-cook-nigerian-jollof/). The Moin Moin data was cross-checked against [Nigerian Food TV](https://www.nigerianfoodtv.com/nigerian-moi-moi-how-to-make-nigerian/), [Lounje](https://lounje.ng/recipes/cookbook-002), and [Koki Afrique](https://kokiafrique.com/en/dishes/moi-moi/). Unit 15 audits safety language, server-only keys, fallback cache boundaries, and RLS assumptions.
 
+`supabase/migrations/202609270005_fix_auth_foreign_keys.sql` corrects databases where the legacy `scans_user_id_fkey` or `allergy_profiles_user_id_fkey` remained after the Auth retrofit. It does not delete rows or modify earlier migrations.
+
 ## `POST /api/scan`
 Multipart form data: `image` (file), optional `dish` (demo dish name). Returns `{ dishName, source, ingredients }`, where `source` is `cache` or `llm_fallback`.
 
