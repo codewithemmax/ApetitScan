@@ -1,0 +1,3 @@
+"use client";
+import { AllergyProfile } from "../lib/types";
+export function ProfileSwitcher({ profiles, selected, onChange }: { profiles: AllergyProfile[]; selected: string; onChange: (id: string) => void }) { return <div className="flex gap-2 overflow-x-auto pb-1">{profiles.map((profile) => <button key={profile.id} onClick={() => onChange(profile.id)} className={`min-w-fit rounded-full border px-4 py-2 text-left text-sm transition ${selected === profile.id ? "border-moss bg-moss text-white" : "border-[#cbd5c2] bg-white text-ink"}`}><span className="font-semibold">{profile.name}</span><span className="ml-2 opacity-70">{profile.note}</span></button>)}</div>; }

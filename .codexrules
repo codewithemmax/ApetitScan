@@ -1,0 +1,21 @@
+# [App Name TBD] — Full-Stack Agent Rules
+
+Read `context/1-project-overview.md` through `context/7-units.md` before writing any code. Full detail lives there; this file is the always-loaded summary.
+
+## Non-negotiable
+* Never output or imply that a dish "is safe," "is allergen-free," or "does not contain" an allergen. Only "commonly contains," "sometimes contains," or "not typically found in this dish." See `context/3-ui-context.md`.
+* Every result must show an "ask the cook" question for each flagged allergen. The flag alone is never returned without it.
+* Every result must be labeled `Verified` (from `dish_cache`) or `Estimated` (LLM fallback). Never blend the two without a visible distinction.
+* API keys (Gemini, Groq, Supabase service role) never reach client-side code. Only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are allowed in the browser bundle.
+* Unverified LLM fallback output is never auto-written into `dish_cache`. That table only grows through manual review.
+* Migrations are additive only. Never modify an applied migration or delete data.
+* Live demo photos come only from dishes in `dish_cache` with `verified: true`. The LLM fallback path is tested privately, never performed live in front of judges.
+
+## Working style
+* One atomic unit at a time, from `context/7-units.md`, in order. Do not skip ahead or batch units.
+* If a requirement conflicts with the context files or a detail is missing, stop and ask. Do not assume.
+* Document every new endpoint, model, or migration in `API.md` as you build it.
+* Before every push: `git diff --check`, `git status --short`, and the relevant build/test.
+
+## Target
+Working end-to-end demo for StacStart's Borderless Bytes hackathon, submission deadline September 28, 2026, 11:59 PM WAT. See `context/1-project-overview.md` for the full release gate.

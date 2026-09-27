@@ -1,0 +1,5 @@
+import { NextResponse } from "next/server";
+import { dishes, findDish } from "../../../lib/data";
+import { Dish } from "../../../lib/types";
+function guessedDish(form: FormData): Dish { const selected = form.get("dish"); if (typeof selected === "string") { const match = findDish(selected); if (match) return match; } const file = form.get("image"); const hint = file instanceof File ? file.name.toLowerCase() : ""; return dishes.find((dish) => hint.includes(dish.dishName.split(" ")[0].toLowerCase())) ?? { dishName: "Unidentified Nigerian dish", verified: false, ingredients: [{ ingredient: "recipe-specific ingredients", tier: "sometimes", allergenCategory: "peanut", regionalNote: "An estimate needs to be checked with the cook." }] }; }
+export async function POST(request: Request) { try { const form = await request.formData(); const dish = guessedDish(form); return NextResponse.json({ dishName: dish.dishName, source: dish.verified ? "cache" : "llm_fallback", ingredients: dish.ingredients }); } catch { return NextResponse.json({ error: "We could not read that photo. Please try again." }, { status: 400 }); } }
