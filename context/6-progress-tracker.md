@@ -21,11 +21,12 @@ Update this file after every meaningful implementation change.
 * Original local demo scaffold: Next.js/Tailwind setup, local dish data, scan/match/ask-cook route handlers, and initial additive-schema attempt.
 
 ## In Progress
-* Unit 4 verified-dish seed added; Supabase application and scan verification remain manual.
+* Unit 6 authenticated scan endpoint added; cache, AI fallback, and scan-history verification remain manual.
 
 ## Next Up
 * Unit 3: finish manual Auth verification.
-* Unit 4: apply and verify the Egusi soup seed, then proceed to Unit 5.
+* Unit 5: force a Gemini failure and verify Groq returns a structured result.
+* Unit 6: verify authenticated cache hit, cache miss fallback, and one owned `scans` row, then proceed to Unit 7.
 * Units 6 and 9: connect authenticated scan persistence and add history endpoints.
 * Units 10-13: add the home, profile, scan, history routes and reconcile the visual system.
 

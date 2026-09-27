@@ -16,6 +16,14 @@ Never expose `SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY`, or `GROQ_API_KEY` to
 
 `supabase/migrations/202609270003_seed_egusi_soup.sql` adds the first hand-reviewed `dish_cache` record: Egusi soup. Its ingredient tiers and shellfish variation were cross-checked against [Koki Afrique](https://kokiafrique.com/en/dishes/egusi-soup/), [Food Network Kitchen](https://www.foodnetwork.com/recipes/food-network-kitchen/egusi-stew-12347892), [My Nigerian Food](https://mynigerianfood.co.uk/nigerian-recipes/nigerian-soups/egusi-soup), and [Boston Medical Center](https://www.bmc.org/recipes/egusi-soup). The seed is idempotent and does not write any LLM output.
 
+## Unit 5 AI wrapper
+
+`lib/ai/identifyDish.ts` exposes `identifyDish(image)`. It calls Gemini first using the server-only `GEMINI_API_KEY`; any provider error or invalid response triggers the same request shape against Groq using `GROQ_API_KEY`. The caller receives structured ingredients and `source: "llm_fallback"`; provider keys never enter client code. Set `GEMINI_MODEL` and `GROQ_MODEL` in `.env.local` to override the defaults.
+
+## Unit 6 scan endpoint
+
+`POST /api/scan` requires a Supabase Auth session and multipart `image`. An optional `dish` field is used by the verified demo flow to look up `dish_cache`; only `verified = true` rows are eligible for a cache hit. Cache hits skip both AI providers. Cache misses call `identifyDish`, return `source: "llm_fallback"`, and never write the result into `dish_cache`. Every successful scan inserts an owned `scans` row. The `flags` value is initialized as an empty JSON array until Unit 7 matching supplies the user-specific flags.
+
 ## `POST /api/scan`
 Multipart form data: `image` (file), optional `dish` (demo dish name). Returns `{ dishName, source, ingredients }`, where `source` is `cache` or `llm_fallback`.
 

@@ -1,5 +1,92 @@
 import { NextResponse } from "next/server";
-import { dishes, findDish } from "../../../lib/data";
-import { Dish } from "../../../lib/types";
-function guessedDish(form: FormData): Dish { const selected = form.get("dish"); if (typeof selected === "string") { const match = findDish(selected); if (match) return match; } const file = form.get("image"); const hint = file instanceof File ? file.name.toLowerCase() : ""; return dishes.find((dish) => hint.includes(dish.dishName.split(" ")[0].toLowerCase())) ?? { dishName: "Unidentified Nigerian dish", verified: false, ingredients: [{ ingredient: "recipe-specific ingredients", tier: "sometimes", allergenCategory: "peanut", regionalNote: "An estimate needs to be checked with the cook." }] }; }
-export async function POST(request: Request) { try { const form = await request.formData(); const dish = guessedDish(form); return NextResponse.json({ dishName: dish.dishName, source: dish.verified ? "cache" : "llm_fallback", ingredients: dish.ingredients }); } catch { return NextResponse.json({ error: "We could not read that photo. Please try again." }, { status: 400 }); } }
+import { identifyDish, type ImageInput } from "../../../lib/ai/identifyDish";
+import { createClient } from "../../../lib/supabase/server";
+import type { DishIngredient } from "../../../lib/types";
+
+interface CachedIngredient {
+  ingredient: string;
+  tier: DishIngredient["tier"];
+  allergen_category: string;
+  regional_note: string | null;
+}
+
+interface CachedDish {
+  dish_name: string;
+  verified: boolean;
+  dish_ingredients: CachedIngredient[];
+}
+
+function isCachedDish(value: unknown): value is CachedDish {
+  if (typeof value !== "object" || value === null) return false;
+  const candidate = value as Record<string, unknown>;
+  return typeof candidate.dish_name === "string" && candidate.verified === true && Array.isArray(candidate.dish_ingredients);
+}
+
+function toIngredients(dish: CachedDish): DishIngredient[] {
+  return dish.dish_ingredients.map((item) => ({
+    ingredient: item.ingredient,
+    tier: item.tier,
+    allergenCategory: item.allergen_category,
+    regionalNote: item.regional_note ?? undefined,
+  }));
+}
+
+async function readImage(form: FormData): Promise<ImageInput> {
+  const file = form.get("image");
+  if (!(file instanceof File) || file.size === 0) throw new Error("Please attach a meal image.");
+  const bytes = await file.arrayBuffer();
+  return { base64: Buffer.from(bytes).toString("base64"), mimeType: file.type || "image/jpeg" };
+}
+
+export async function POST(request: Request) {
+  const supabase = await createClient();
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) return NextResponse.json({ error: "Please log in before scanning a dish." }, { status: 401 });
+
+  try {
+    const form = await request.formData();
+    const image = await readImage(form);
+    const selectedDish = form.get("dish");
+    let dishName: string;
+    let ingredients: DishIngredient[];
+    let source: "cache" | "llm_fallback";
+
+    const { data: cacheData, error: cacheError } = typeof selectedDish === "string" && selectedDish && !selectedDish.includes("Estimated")
+      ? await supabase.from("dish_cache").select("dish_name, verified, dish_ingredients(ingredient, tier, allergen_category, regional_note)").eq("dish_name", selectedDish).eq("verified", true).maybeSingle()
+      : { data: null, error: null };
+
+    if (cacheError) {
+      console.error("dish_cache lookup failed", cacheError);
+      return NextResponse.json({ error: "We could not check the verified dish library." }, { status: 500 });
+    }
+
+    if (isCachedDish(cacheData)) {
+      dishName = cacheData.dish_name;
+      ingredients = toIngredients(cacheData);
+      source = "cache";
+    } else {
+      const identified = await identifyDish(image);
+      dishName = identified.dishName;
+      ingredients = identified.ingredients;
+      source = "llm_fallback";
+    }
+
+    const imageUrl = form.get("imageUrl");
+    const { error: scanError } = await supabase.from("scans").insert({
+      user_id: user.id,
+      image_url: typeof imageUrl === "string" && imageUrl ? imageUrl : null,
+      matched_dish: dishName,
+      flags: [],
+      source,
+    });
+    if (scanError) {
+      console.error("scan history insert failed", scanError);
+      return NextResponse.json({ error: "The dish was identified, but we could not save this scan." }, { status: 500 });
+    }
+
+    return NextResponse.json({ dishName, ingredients, source });
+  } catch (error) {
+    console.error("scan failed", error);
+    return NextResponse.json({ error: "We could not identify that dish. Please try again." }, { status: 400 });
+  }
+}
