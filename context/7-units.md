@@ -81,3 +81,8 @@ Each unit is one atomic step: small enough to build, test, and commit on its own
 * Scope: Deploy to Vercel (Hobby tier). Finish `API.md` with every endpoint's request/response shape and manual test steps.
 * Done when: The deployed link works end to end on a phone, from signup through scan through history, and a reviewer could exercise the whole flow from `API.md` alone.
 * Depends on: Unit 15.
+
+## Unit 17: Ingredient and Nutrition View
+* Scope: Display each scan's possible ingredients grouped by tier, add qualitative nutrition cues without unsupported numeric calorie/macro estimates, persist ingredients for scan history with an additive migration, and shift the shared visual palette to blue.
+* Done when: A scan and its history entry show the tiered ingredient list and cautious nutrition guidance; no exact calories or macro grams are fabricated; existing allergy questions and Verified/Estimated labels remain visible; all routes use the blue palette.
+* Depends on: Units 6, 9, 11, 12, and 13.

@@ -87,6 +87,7 @@ export async function POST(request: Request) {
       image_url: typeof imageUrl === "string" && imageUrl ? imageUrl : null,
       matched_dish: dishName,
       flags,
+      ingredients,
       source,
     }).select("id").single();
     if (scanError) {

@@ -26,11 +26,11 @@ Never expose `SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY`, or `GROQ_API_KEY` to
 
 ## Units 7-12 matching, history, profile, and pages
 
-`POST /api/match` remains a pure local matcher, and `POST /api/ask-cook` produces one question per flag. The scan endpoint now accepts the authenticated profile's allergen list and stores the returned flags with the scan. `GET /api/history` lists the current user's scans in reverse chronological order. `DELETE /api/history/:id` deletes only the current user's row; RLS remains the database-level boundary. Authenticated UI routes now include `/scan`, `/history`, and `/profile`; `/profile` reads and updates `allergy_profiles` with the browser-safe Supabase client.
+`POST /api/match` remains a pure local matcher, and `POST /api/ask-cook` produces one question per flag. The scan endpoint accepts the authenticated profile's allergen list and stores returned flags and possible ingredients with the scan. `GET /api/history` lists the current user's scans, including stored ingredients, in reverse chronological order. `DELETE /api/history/:id` deletes only the current user's row; RLS remains the database-level boundary. Authenticated UI routes now include `/scan`, `/history`, and `/profile`; `/profile` reads and updates `allergy_profiles` with the browser-safe Supabase client.
 
 ## Unit 13 design pass
 
-All seven routes share the PetitScan visual language: moss, lime, cream, and coral palette; responsive spacing; shared authenticated navigation; keyboard focus states; hover transitions; loading states; and a dedicated empty history state. `/scan` announces “Identifying dish…” followed by “Checking ingredients…”.
+All seven routes share the PetitScan visual language: ice blue, cobalt, navy, responsive spacing, shared authenticated navigation, keyboard focus states, hover transitions, loading states, and a dedicated empty history state. `/scan` announces “Identifying dish…” followed by “Checking ingredients…”.
 
 ## Units 14-15 verified dishes and security pass
 
@@ -38,8 +38,12 @@ All seven routes share the PetitScan visual language: moss, lime, cream, and cor
 
 `supabase/migrations/202609270005_fix_auth_foreign_keys.sql` corrects databases where the legacy `scans_user_id_fkey` or `allergy_profiles_user_id_fkey` remained after the Auth retrofit. It does not delete rows or modify earlier migrations.
 
+## Unit 17 ingredient and nutrition view
+
+`supabase/migrations/202609280001_scan_ingredients.sql` adds an `ingredients` JSONB column to `scans` so history can revisit possible ingredients without rerunning the scan. Scan results group ingredients by their `always`, `commonly`, and `sometimes` tiers. The nutrition panel reports only qualitative ingredient-based cues and general meal-balance tips; it does not invent calories or macro grams because photo scans do not include portion sizes or recipe quantities. This is general food information, not individualized or medical advice. General balance guidance follows the [WHO healthy diet principles](https://www.who.int/news-room/fact-sheets/detail/healthy-diet).
+
 ## `POST /api/scan`
-Multipart form data: `image` (file), optional `dish` (demo dish name). Returns `{ dishName, source, ingredients }`, where `source` is `cache` or `llm_fallback`.
+Multipart form data: `image` (file), optional `dish` (demo dish name), optional `allergens` (JSON string array). Returns `{ scanId, dishName, source, ingredients, flags }`, where `source` is `cache` or `llm_fallback`. Each ingredient has `ingredient`, `tier`, `allergenCategory`, and optional `regionalNote`.
 
 ## `POST /api/match`
 JSON body: `{ ingredients: DishIngredient[], allergens: string[] }`. Returns `{ flags: Flag[] }`. This endpoint makes no external calls.

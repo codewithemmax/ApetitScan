@@ -19,11 +19,13 @@ Existing food-allergen apps (Yuka, Intol, EatSafe, and similar) all read a barco
 5. Flagged allergens are shown, tiered (always / commonly / sometimes) and labeled by source (Verified / Estimated).
 6. Each flag comes with a plain-language question to ask the cook.
 7. The scan is saved to the user's history automatically, viewable and revisitable from `/history`.
+8. The result shows the dish's possible ingredients grouped by recipe frequency, plus ingredient-based nutrition cues and practical, non-clinical meal tips. Calories and gram-based macros are not calculated from a photo because portion sizes and ingredient quantities are unknown.
 
 ## What This App Must NOT Claim
 * That a dish "is safe" or "does not contain" an allergen, ever. Absence in the cache is not proof of absence in a specific plate.
 * Any medical or diagnostic claim (this is not a substitute for a doctor, an allergist, or reading a real label when one exists).
 * Certainty for LLM-fallback results. These are estimates, and must read as estimates.
+* Exact calorie or macronutrient values inferred from a photo without measured portions and recipe quantities.
 
 ## Team and Ownership
 * Emmanuel: full stack, backend and frontend, on this repo.

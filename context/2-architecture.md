@@ -51,6 +51,7 @@ Everything above is zero-dollar. No card on file anywhere in this stack.
 * image_url (text)
 * matched_dish (text, nullable)
 * flags (jsonb: the tiered allergen flags returned for this scan, stored so history doesn't need to re-run matching)
+* ingredients (jsonb: the identified possible ingredients and their recipe-frequency tiers, stored for history display)
 * source (text: "cache" | "llm_fallback")
 * created_at
 
@@ -60,6 +61,8 @@ Everything above is zero-dollar. No card on file anywhere in this stack.
 * `POST /api/ask-cook` — flagged ingredients in, one plain-language question per flag out.
 * `GET /api/history` — returns the authenticated user's past scans, most recent first, including dish name, flags, source, and timestamp.
 * `DELETE /api/history/:id` — deletes one scan row, owned by the authenticated user only.
+
+Scan results also show possible ingredients grouped by tier and qualitative nutrition cues derived only from those ingredient names. Do not infer exact calories or macro grams without measured portion sizes and recipe quantities. Nutrition copy is general food information, not personalized or medical advice.
 
 ## Pages (Frontend Routes)
 * `/signup` — Supabase Auth signup, email + password.

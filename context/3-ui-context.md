@@ -29,3 +29,9 @@ Do not return, render, or structurally support any of the following:
 
 ## Frontend Labels (for backend awareness)
 Field names and returned values should let the frontend render `Verified` / `Estimated` and the three tiers directly, without translation or guesswork on the frontend side. If a field name changes on the backend, the UI labels above must still be reachable without a rewrite.
+
+## Ingredient and nutrition presentation
+* Show possible ingredients grouped as `Always contains`, `Commonly contains`, and `Sometimes contains`; preserve the scan's `Verified` or `Estimated` label nearby.
+* Nutrition guidance may describe qualitative ingredient-based cues (for example, a likely carbohydrate or protein source) and broad meal-balancing ideas.
+* Never infer exact calories or grams of macronutrients from a photograph without measured portion sizes and recipe quantities. State when values are unavailable; do not invent them.
+* Nutrition tips are general food information, not individualized calorie targets, medical advice, or a diagnosis.
