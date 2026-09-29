@@ -175,6 +175,10 @@ export async function POST(request: Request) {
     if (matched) matchedFoods.set(component.component_id, matched);
   }
   const correctionResult = { component_id: body.component_id, step, original: original ?? null, corrected };
+  const result = matchedFoods.size === requestComponents.length
+    ? buildEstimateResult(requestComponents, stored, matchedFoods, entries)
+    : null;
+  const status = result?.ready && result.questions.length === 0 ? "complete" : "needs_input";
   const { data: correctionRow, error: correctionError } = await supabase.from("scan_corrections").insert({
     scan_id: body.scan_id,
     user_id: user.id,
@@ -184,10 +188,6 @@ export async function POST(request: Request) {
   }).select("id").single();
   if (correctionError || !correctionRow) return NextResponse.json({ error: "We could not save this correction." }, { status: 500 });
 
-  const result = matchedFoods.size === requestComponents.length
-    ? buildEstimateResult(requestComponents, stored, matchedFoods, entries)
-    : null;
-  const status = result?.ready && result.questions.length === 0 ? "complete" : "needs_input";
   const update = await supabase.from("scans").update({
     status,
     components: result?.components ?? editable,
@@ -221,6 +221,6 @@ export async function POST(request: Request) {
       range_straddles_band: result.range_straddles_band,
       boundary_note: result.boundary_note,
       disclaimer: result.disclaimer,
-    } : { components: editable, questions: result?.questions ?? [{ step: "food", prompt: "Choose a verified food for every component." }] }),
+    } : { components: result?.components ?? editable, questions: result?.questions ?? [{ step: "food", prompt: "Choose a verified food for every component." }] }),
   });
 }
