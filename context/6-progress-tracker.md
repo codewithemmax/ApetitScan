@@ -3,7 +3,7 @@
 Update this file after every meaningful implementation change.
 
 ## Current Phase
-* Pivot from PetitScan (allergen scanner) to ApetitScan (African food intelligence: carbohydrate estimate, Sugar Spoon Index, Meal Impact, Buffer Engine). Context files rewritten on 2026-09-29. No ApetitScan code has been written yet.
+* Pivot from PetitScan (allergen scanner) to ApetitScan (African food intelligence: carbohydrate estimate, Sugar Spoon Index, Meal Impact, Buffer Engine). Context files rewritten on 2026-09-29; Unit 1-5 implementation work is underway.
 
 ## Current Goal
 * Ship a working end-to-end demo of the two demo plates for the StacStart Borderless Bytes hackathon, submission deadline September 30, 2026 (confirm the cutoff time). Reuse the existing auth, history, multi-page, and provider plumbing; replace the allergen domain logic, data, and UI copy.
@@ -25,13 +25,14 @@ Update this file after every meaningful implementation change.
 * Rewrite of context files 1-7 for ApetitScan (2026-09-29).
 
 ## In Progress
-* Nothing in code. Next action is Unit 1 (pivot audit and legacy freeze).
+* Unit 1 is complete. Unit 2 migration was manually applied by the user; cross-user RLS verification is unconfirmed. User reports applying the Unit 3 seed; row-level verification remains pending. Unit 4 wrapper and Unit 5 pure nutrition/Sugar Spoon functions are implemented; acceptance checks remain pending.
 
 ## Next Up
-* Unit 1: audit the repo against these files, report the gap list, then retire the allergen UI and routes and rename the product.
-* Unit 2: additive migration for `foods`, `food_nutrition`, new `scans` columns, and `scan_corrections`, with RLS.
-* Unit 3: hand-verify and seed the foods needed for the two demo plates, with a source for every row.
-* Units 4-10: vision wrapper, engines, endpoints, corrections, history.
+* Unit 2: cross-user RLS verification remains unconfirmed.
+* Unit 3: verify the user-applied demo food seed rows in Supabase before marking complete.
+* Unit 4: run acceptance checks on both demo photos, Gemini-to-Groq fallback, and malformed output before marking complete.
+* Unit 5: run fixture acceptance checks for both demo plates, widened unconfirmed portions, and missing/unverified rows before marking complete.
+* Units 6-10: confidence and impact engines, endpoints, corrections, history.
 * Units 11-12: scan flow UI, then home, profile, and history rework.
 * Units 13-14: safety and credibility pass, deploy, demo rehearsal.
 
@@ -66,4 +67,7 @@ Update this file after every meaningful implementation change.
 * Schema audit: only the original users, profiles retrofit, legacy dish_cache, dish_ingredients, allergy_profiles, and minimal scans definitions exist in migration history. scans.user_id currently references legacy users, source is legacy NOT NULL with an allergen-era check, and 202609280001_scan_ingredients.sql contains only w, so it is not an applied ingredients migration. No ApetitScan foods, food_nutrition, scan_corrections, new scans columns, or RLS migration exists yet.
 * Contradictions found: README was obsolete Macro/Express/MongoDB documentation; the former home route was invalid placeholder content; the history and signup surfaces still described allergen workflows. These are corrected within Unit 1. The schema contradiction is intentionally deferred to Unit 2 because this unit forbids database changes.
 * Unit 2 must treat legacy scans constraints as insert blockers: preserve legacy columns/tables, add the documented columns and RLS additively, and relax only legacy NOT NULL/check constraints that prevent authenticated ApetitScan inserts. Do not edit or reuse the malformed prior migration; add a new migration.
-* 2026-09-29 Unit 2: added the additive ApetitScan schema migration 202609290001_apetitscan_schema.sql. It creates foods, food_nutrition, and scan_corrections, adds the documented result fields and checks to scans, relaxes only the legacy source NOT NULL constraint, indexes user/foreign-key access paths, and scopes scans and scan_corrections policies to auth.uid(). Existing migrations and legacy tables remain untouched. Live Supabase application and cross-user RLS testing are still pending.
+* 2026-09-29 Unit 2: added the additive ApetitScan schema migration 202609290001_apetitscan_schema.sql. It creates foods, food_nutrition, and scan_corrections, adds the documented result fields and checks to scans, relaxes only the legacy source NOT NULL constraint, indexes user/foreign-key access paths, and scopes scans and scan_corrections policies to auth.uid(). User reports manually applying the SQL in Supabase; cross-user RLS testing is unconfirmed.
+* 2026-09-29 Unit 3: drafted the sourced demo food seed migration and documented its coverage and assumptions. User reports applying it through the Supabase SQL editor; seeded-row verification is not available from this workspace.
+* 2026-09-29 Unit 4: added `lib/ai/identifyMeal.ts` with Gemini primary, Groq fallback, identification-only prompt, strict unknown-response validation, portion/preparation guesses, per-step confidence, and provider timeouts. Documented its input/output and manual acceptance steps in `API.md`; acceptance checks remain pending.
+* 2026-09-29 Unit 5: added pure verified-row nutrition range aggregation and clarification handling, adjacent-tier widening for unconfirmed portions, disclosed preparation assumptions, outward-rounded Sugar Spoon conversion using the 4 g default, shared range formatting, and the required disclaimer constant. Documented the behavior in `API.md`; fixture acceptance checks remain pending. The workspace denied creation of new `lib/config` and `lib/constants` directories, so their values currently live in `lib/services/nutritionConfig.ts`. `tsc --noEmit` produced no output but did not finish within 60 seconds and was stopped.
