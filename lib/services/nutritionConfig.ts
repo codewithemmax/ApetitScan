@@ -8,3 +8,6 @@ export const MEAL_IMPACT_THRESHOLDS_G = {
   lowUpperExclusive: 50,
   moderateUpperInclusive: 100,
 } as const;
+
+/** Product heuristic: predictions below this per-step score require user confirmation. */
+export const IDENTIFICATION_CONFIRMATION_THRESHOLD = 70;

@@ -52,7 +52,6 @@ function parseIdentification(value: unknown): IdentifiedMeal {
   if (!isRecord(result) || !Array.isArray(result.components)) {
     throw new Error("The vision response must contain a components array.");
   }
-  if (result.components.length === 0) throw new Error("No food components could be identified in this photo.");
   if (result.components.length > 20) throw new Error("The vision response contained too many components.");
 
   const components = result.components.map((item, index): MealComponentIdentification => {

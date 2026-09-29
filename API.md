@@ -6,7 +6,7 @@ Unit 1 freezes the legacy database and retires the allergen-era API surface. No 
 
 - GET /api/history returns the authenticated user's existing scan rows in reverse chronological order.
 - DELETE /api/history/:id deletes only the authenticated user's scan row.
-- POST /api/scan is reserved for the ApetitScan identification contract and returns a temporary rebuilding response until Unit 7.
+- POST /api/scan accepts an authenticated meal photo and returns identified components, clarification questions, and the saved scan ID.
 
 ## Planned ApetitScan endpoints
 
@@ -42,3 +42,11 @@ When portion is unconfirmed, the engine widens to adjacent seeded portion tiers 
 `calculateConfidence(components)` in `lib/services/confidence.ts` clamps input scores to 0–100 and validates each non-negative carbohydrate range (`high >= low`). For each meal it uses the minimum food/preparation confidence for `vision`; `portion` is 100 for a user-confirmed portion or the model portion confidence otherwise; `nutrition` is the minimum of the row's `entry_confidence` and `(carbs_low_g / carbs_high_g) * 100`. For a `0–0 g` range, nutrition confidence is the row's `entry_confidence`. `overall` is the minimum of `vision`, `portion`, and `nutrition`.
 
 `calculateMealImpact(range, components)` in `lib/services/mealImpact.ts` classifies the carbohydrate-range midpoint only: below 50 g is `low`, 50 through 100 g is `moderate`, and above 100 g is `high`. Vegetables, protein, and identified preparations are returned as explanatory `drivers`; they do not modify the band. A range that crosses either threshold sets `range_straddles_band` and includes a `boundary_note`. The range-width term in nutrition confidence reflects estimate spread; there is no additional undocumented boundary penalty. Thresholds are user-approved prototype rules, not clinical cutoffs. Both functions are pure and make no provider or database calls.
+
+## Unit 7 `POST /api/scan`
+
+The route requires a signed-in Supabase user and accepts `multipart/form-data` with an `image` field containing a JPEG, PNG, or WebP photo up to 8 MiB. It queries the verified food catalogue and its seeded preparations, identifies the photo through `identifyMeal`, and matches names exactly to the catalogue (no fuzzy nutrition lookup). Unmatched or low-confidence foods generate a food or main-carbohydrate question; portion and preparation questions are created when the model score is below 70, the model returns `uncertain`, or there is no matching seeded preparation. The 70% cutoff is a product heuristic, not a clinical validation threshold.
+
+On success it inserts an owner-scoped `scans` row with `components` and `status`; `status` is `needs_input` when there are questions, otherwise `complete`. Components carry IDs, catalogue match/category, food/portion/preparation guesses, per-step confidence, and confirmation flags. The route does not return or store nutrition values or retain the uploaded photo (`image_url` is null). Response: `{ scan_id, status, components, questions }`, where each question has `component_id`, `step`, `prompt`, and seeded `options`. Unidentified empty model output becomes an `unidentified food` placeholder and asks for the main carbohydrate. Authentication failure returns 401, invalid/unsupported/oversized uploads return 400/415/413, provider failure returns 502 (missing server keys returns 503), and catalogue or scan persistence failures return 503/500 respectively. The verified-food cutoff lives in `lib/services/nutritionConfig.ts`.
+
+Manual acceptance checks: submit both demo photos as an authenticated user and inspect their questions and saved scan rows; submit a photo the model cannot identify and confirm it asks for the main carbohydrate; force each confidence step below 70 and confirm its corresponding question; submit unauthenticated and confirm no scan row is inserted.
