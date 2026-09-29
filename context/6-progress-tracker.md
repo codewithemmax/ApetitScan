@@ -36,7 +36,7 @@ Update this file after every meaningful implementation change.
 * Unit 7: verify both demo photos, the unidentified-photo question, per-step 70% confirmation prompts, authentication, and scan persistence.
 * Unit 8: verify both demo estimates, disclaimer presence, missing-row ask behavior, and owner-only scan updates.
 * Unit 9 code is implemented; verify Buffer feasibility/gating, recalculation after correction, and correction-row owner scoping manually.
-* Unit 10: update the history response and verify owner-only deletion.
+* Unit 10 code is implemented; verify newest-first history, null-safe legacy rows, and owner-only deletion manually.
 * Units 11-12: scan flow UI, then home, profile, and history rework.
 * Units 13-14: safety and credibility pass, deploy, demo rehearsal.
 
@@ -79,3 +79,4 @@ Update this file after every meaningful implementation change.
 * 2026-09-29 Unit 7: implemented authenticated multipart image handling, verified catalogue/preparation lookup, exact food matching, per-step 70% confirmation questions, unidentified-food fallback question, and RLS-scoped scan persistence. Photos are not retained and no nutrition values are emitted. Documented request/response, limits, threshold basis, and acceptance steps in `API.md`; manual checks remain pending.
 * 2026-09-29 Unit 8: implemented authenticated estimate requests bound to the caller's saved component IDs, verified-row-only nutrition lookups, confidence/impact/spoon calculations, clarification behavior for missing or uncertain inputs, disclaimer inclusion, and owner-scoped scan updates. Documented the JSON contract and manual acceptance checks in `API.md`; acceptance remains pending.
 * 2026-09-29 Unit 9: added authenticated Buffer and correction endpoints. Buffer actions are feasibility-ranked, saved with `meal_prepared`, and omit Prepare actions for already-prepared meals. Corrections validate against verified foods and nutrition preparations, write to `scan_corrections` plus the owner's scan only, and recalculate through the shared estimate builder. Added API contracts and manual acceptance checks; runtime and database acceptance remain pending.
+* 2026-09-29 Unit 10: updated authenticated history to return owner-scoped scans newest first with Meal Impact, carbohydrate and Sugar Spoon ranges, status, and timestamp; older rows with absent/invalid estimate bounds safely return null ranges. Tightened owner-only deletion to return 404 for missing or non-owned scans while retaining RLS enforcement. Documented response shapes and manual acceptance steps; database acceptance remains pending.
