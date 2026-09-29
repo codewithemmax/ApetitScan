@@ -50,3 +50,26 @@ The route requires a signed-in Supabase user and accepts `multipart/form-data` w
 On success it inserts an owner-scoped `scans` row with `components` and `status`; `status` is `needs_input` when there are questions, otherwise `complete`. Components carry IDs, catalogue match/category, food/portion/preparation guesses, per-step confidence, and confirmation flags. The route does not return or store nutrition values or retain the uploaded photo (`image_url` is null). Response: `{ scan_id, status, components, questions }`, where each question has `component_id`, `step`, `prompt`, and seeded `options`. Unidentified empty model output becomes an `unidentified food` placeholder and asks for the main carbohydrate. Authentication failure returns 401, invalid/unsupported/oversized uploads return 400/415/413, provider failure returns 502 (missing server keys returns 503), and catalogue or scan persistence failures return 503/500 respectively. The verified-food cutoff lives in `lib/services/nutritionConfig.ts`.
 
 Manual acceptance checks: submit both demo photos as an authenticated user and inspect their questions and saved scan rows; submit a photo the model cannot identify and confirm it asks for the main carbohydrate; force each confidence step below 70 and confirm its corresponding question; submit unauthenticated and confirm no scan row is inserted.
+
+## Unit 8 `POST /api/estimate`
+
+The route requires authentication and accepts JSON in this shape:
+
+```json
+{
+  "scan_id": "<scan UUID>",
+  "components": [{
+    "component_id": "<ID returned by /api/scan>",
+    "food": "white rice",
+    "food_confirmed": true,
+    "portion": "medium",
+    "portion_confirmed": true,
+    "preparation": "boiled",
+    "preparation_confirmed": true
+  }]
+}
+```
+
+The component IDs must exactly match the owner’s saved scan; client-supplied nutrition values are ignored/not accepted. Foods must exactly match a verified catalogue record. The route reads that food’s verified `food_nutrition` rows, runs the pure Unit 5-6 functions, and updates only the owner’s scan. A missing/unverified row returns `status: needs_input`, a clarification question, and no carbohydrate, spoon, or impact values. When portion/preparation remains unconfirmed but a supported range can be formed, the estimate includes the widened range, disclosed assumptions, and questions; its status stays `needs_input` until clarified.
+
+Successful estimates return `{ scan_id, status, components, total_carbs_g, sugar_spoons, meal_impact, confidence, drivers, assumptions, questions, range_straddles_band, boundary_note, disclaimer }`. `components` include each carbohydrate range and verified source note. All responses containing estimate values include the exact disclaimer. Errors: 401 unauthenticated, 400 invalid request/component set, 404 scan not found or not owned, 409 no identified scan components, 503 catalogue read failure, and 500 persistence failure. Manual acceptance: try both demo plates, verify ranges trace to seeded rows and both receive the disclaimer, test a missing verified row returns no number, and confirm one user cannot estimate another user’s scan.

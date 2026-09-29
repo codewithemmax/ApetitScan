@@ -25,7 +25,7 @@ Update this file after every meaningful implementation change.
 * Rewrite of context files 1-7 for ApetitScan (2026-09-29).
 
 ## In Progress
-* Unit 1 is complete. Unit 2 migration was manually applied by the user; cross-user RLS verification is unconfirmed. User reports applying the Unit 3 seed; row-level verification remains pending. Unit 4-6 code and the Unit 7 scan endpoint are implemented; acceptance checks remain pending.
+* Unit 1 is complete. Unit 2 migration was manually applied by the user; cross-user RLS verification is unconfirmed. User reports applying the Unit 3 seed; row-level verification remains pending. Unit 4-6 code and Unit 7-8 endpoints are implemented; acceptance checks remain pending.
 
 ## Next Up
 * Unit 2: cross-user RLS verification remains unconfirmed.
@@ -34,7 +34,8 @@ Update this file after every meaningful implementation change.
 * Unit 5: run fixture acceptance checks for both demo plates, widened unconfirmed portions, and missing/unverified rows before marking complete.
 * Unit 6: run fixture acceptance checks for the confidence formula, both demo-plate impact bands, and a boundary-straddling range before marking complete.
 * Unit 7: verify both demo photos, the unidentified-photo question, per-step 70% confirmation prompts, authentication, and scan persistence.
-* Units 8-10: estimate, buffer/correction, and history endpoints.
+* Unit 8: verify both demo estimates, disclaimer presence, missing-row ask behavior, and owner-only scan updates.
+* Units 9-10: buffer/correction and history endpoints.
 * Units 11-12: scan flow UI, then home, profile, and history rework.
 * Units 13-14: safety and credibility pass, deploy, demo rehearsal.
 
@@ -75,3 +76,4 @@ Update this file after every meaningful implementation change.
 * 2026-09-29 Unit 5: added pure verified-row nutrition range aggregation and clarification handling, adjacent-tier widening for unconfirmed portions, disclosed preparation assumptions, outward-rounded Sugar Spoon conversion using the 4 g default, shared range formatting, and the required disclaimer constant. Documented the behavior in `API.md`; fixture acceptance checks remain pending. The workspace denied creation of new `lib/config` and `lib/constants` directories, so their values currently live in `lib/services/nutritionConfig.ts`. `tsc --noEmit` produced no output but did not finish within 60 seconds and was stopped.
 * 2026-09-29 Unit 6: added the clamped minimum-rule confidence engine and midpoint-only impact classification using the user-approved 50 g / 100 g thresholds. Vegetables, protein, and preparation are explanatory drivers only. Boundary straddles are flagged without an additional penalty factor; the specified range-tightness confidence formula applies as written. Documented formulas and threshold basis in `API.md`; fixture acceptance checks remain pending.
 * 2026-09-29 Unit 7: implemented authenticated multipart image handling, verified catalogue/preparation lookup, exact food matching, per-step 70% confirmation questions, unidentified-food fallback question, and RLS-scoped scan persistence. Photos are not retained and no nutrition values are emitted. Documented request/response, limits, threshold basis, and acceptance steps in `API.md`; manual checks remain pending.
+* 2026-09-29 Unit 8: implemented authenticated estimate requests bound to the caller's saved component IDs, verified-row-only nutrition lookups, confidence/impact/spoon calculations, clarification behavior for missing or uncertain inputs, disclaimer inclusion, and owner-scoped scan updates. Documented the JSON contract and manual acceptance checks in `API.md`; acceptance remains pending.
