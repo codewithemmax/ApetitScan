@@ -2,3 +2,9 @@
 export const GRAMS_PER_SPOON = 4;
 
 export const DISCLAIMER_TEXT = "This is an estimate of carbohydrate exposure, not a glucose measurement.";
+
+/** User-approved Unit 6 carbohydrate midpoint bands; contextual foods do not shift these thresholds. */
+export const MEAL_IMPACT_THRESHOLDS_G = {
+  lowUpperExclusive: 50,
+  moderateUpperInclusive: 100,
+} as const;

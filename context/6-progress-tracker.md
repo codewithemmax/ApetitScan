@@ -3,7 +3,7 @@
 Update this file after every meaningful implementation change.
 
 ## Current Phase
-* Pivot from PetitScan (allergen scanner) to ApetitScan (African food intelligence: carbohydrate estimate, Sugar Spoon Index, Meal Impact, Buffer Engine). Context files rewritten on 2026-09-29; Unit 1-5 implementation work is underway.
+* Pivot from PetitScan (allergen scanner) to ApetitScan (African food intelligence: carbohydrate estimate, Sugar Spoon Index, Meal Impact, Buffer Engine). Context files rewritten on 2026-09-29; Unit 1-6 implementation work is underway.
 
 ## Current Goal
 * Ship a working end-to-end demo of the two demo plates for the StacStart Borderless Bytes hackathon, submission deadline September 30, 2026 (confirm the cutoff time). Reuse the existing auth, history, multi-page, and provider plumbing; replace the allergen domain logic, data, and UI copy.
@@ -25,14 +25,15 @@ Update this file after every meaningful implementation change.
 * Rewrite of context files 1-7 for ApetitScan (2026-09-29).
 
 ## In Progress
-* Unit 1 is complete. Unit 2 migration was manually applied by the user; cross-user RLS verification is unconfirmed. User reports applying the Unit 3 seed; row-level verification remains pending. Unit 4 wrapper and Unit 5 pure nutrition/Sugar Spoon functions are implemented; acceptance checks remain pending.
+* Unit 1 is complete. Unit 2 migration was manually applied by the user; cross-user RLS verification is unconfirmed. User reports applying the Unit 3 seed; row-level verification remains pending. Unit 4 wrapper and Unit 5-6 pure engines are implemented; acceptance checks remain pending.
 
 ## Next Up
 * Unit 2: cross-user RLS verification remains unconfirmed.
 * Unit 3: verify the user-applied demo food seed rows in Supabase before marking complete.
 * Unit 4: run acceptance checks on both demo photos, Gemini-to-Groq fallback, and malformed output before marking complete.
 * Unit 5: run fixture acceptance checks for both demo plates, widened unconfirmed portions, and missing/unverified rows before marking complete.
-* Units 6-10: confidence and impact engines, endpoints, corrections, history.
+* Unit 6: run fixture acceptance checks for the confidence formula, both demo-plate impact bands, and a boundary-straddling range before marking complete.
+* Units 7-10: endpoints, corrections, history.
 * Units 11-12: scan flow UI, then home, profile, and history rework.
 * Units 13-14: safety and credibility pass, deploy, demo rehearsal.
 
@@ -41,7 +42,7 @@ Update this file after every meaningful implementation change.
 * Hackathon submission cutoff time, required submission materials, and track (the old files named the Access & Inclusion track; the new brief does not).
 * Whether the team is solo or has a confirmed second person, and if so, how work is split.
 * Sources and reviewer for the verified carbohydrate ranges per food, preparation, and portion.
-* Meal Impact bands: thresholds and modifiers (composition, preparation, GI category), and the basis for each. Default: midpoint of the total range, confidence reduced when the range straddles a boundary.
+* Meal Impact prototype rule is set: midpoint bands Low <50 g, Moderate 50–100 g, High >100 g; vegetable, protein, and preparation context are explanatory drivers only. A boundary-crossing range is flagged. Thresholds are user-approved prototype rules, not clinical cutoffs.
 * Sugar Spoon convention. Default: 1 spoon = 4 g of carbohydrate.
 * Ask-thresholds per step, and the overall confidence rule. Default: overall equals the lowest of vision, portion, nutrition.
 * Verified set: keep it Nigerian only (this pack), or include other African dishes the brief hints at.
@@ -71,3 +72,4 @@ Update this file after every meaningful implementation change.
 * 2026-09-29 Unit 3: drafted the sourced demo food seed migration and documented its coverage and assumptions. User reports applying it through the Supabase SQL editor; seeded-row verification is not available from this workspace.
 * 2026-09-29 Unit 4: added `lib/ai/identifyMeal.ts` with Gemini primary, Groq fallback, identification-only prompt, strict unknown-response validation, portion/preparation guesses, per-step confidence, and provider timeouts. Documented its input/output and manual acceptance steps in `API.md`; acceptance checks remain pending.
 * 2026-09-29 Unit 5: added pure verified-row nutrition range aggregation and clarification handling, adjacent-tier widening for unconfirmed portions, disclosed preparation assumptions, outward-rounded Sugar Spoon conversion using the 4 g default, shared range formatting, and the required disclaimer constant. Documented the behavior in `API.md`; fixture acceptance checks remain pending. The workspace denied creation of new `lib/config` and `lib/constants` directories, so their values currently live in `lib/services/nutritionConfig.ts`. `tsc --noEmit` produced no output but did not finish within 60 seconds and was stopped.
+* 2026-09-29 Unit 6: added the clamped minimum-rule confidence engine and midpoint-only impact classification using the user-approved 50 g / 100 g thresholds. Vegetables, protein, and preparation are explanatory drivers only. Boundary straddles are flagged without an additional penalty factor; the specified range-tightness confidence formula applies as written. Documented formulas and threshold basis in `API.md`; fixture acceptance checks remain pending.

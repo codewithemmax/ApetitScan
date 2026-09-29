@@ -16,6 +16,7 @@ export interface FoodNutritionEntry {
   carbs_low_g: number;
   carbs_high_g: number;
   source_note: string;
+  entry_confidence: number;
 }
 
 export interface NutritionComponentInput {
@@ -41,7 +42,7 @@ export interface EstimatedNutritionComponent {
   portion: PortionGuess;
   preparation: string | null;
   carbs_g: Range | null;
-  entry: { verified: true; source_note: string } | null;
+  entry: { verified: true; source_note: string; entry_confidence: number } | null;
   needs_input: boolean;
 }
 
@@ -63,7 +64,8 @@ function validEntry(entry: FoodNutritionEntry): boolean {
   return entry.verified === true && Boolean(entry.food.trim()) && Boolean(entry.preparation.trim()) &&
     PORTION_ORDER.includes(entry.portion_size) && Boolean(entry.source_note.trim()) &&
     Number.isFinite(entry.carbs_low_g) && Number.isFinite(entry.carbs_high_g) &&
-    entry.carbs_low_g >= 0 && entry.carbs_high_g >= entry.carbs_low_g;
+    entry.carbs_low_g >= 0 && entry.carbs_high_g >= entry.carbs_low_g &&
+    Number.isFinite(entry.entry_confidence) && entry.entry_confidence >= 0 && entry.entry_confidence <= 100;
 }
 
 function makeQuestion(
@@ -161,7 +163,11 @@ function calculateComponent(
       portion: component.portion,
       preparation,
       carbs_g: { low, high },
-      entry: { verified: true, source_note: selectedRows.map((entry) => entry.source_note).join("\n") },
+      entry: {
+        verified: true,
+        source_note: selectedRows.map((entry) => entry.source_note).join("\n"),
+        entry_confidence: Math.min(...selectedRows.map((entry) => entry.entry_confidence)),
+      },
       needs_input: questions.length > 0,
     },
     assumptions,
