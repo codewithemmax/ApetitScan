@@ -1,55 +1,20 @@
-# PetitScan API
+# ApetitScan API
 
-The current demo uses an in-memory verified dish catalog so it runs without credentials. Production wiring should use the Supabase tables in `supabase/migrations/202609270001_initial_schema.sql` and the server-only variables in `.env.example`.
+Unit 1 freezes the legacy database and retires the allergen-era API surface. No database tables or migrations were modified.
 
-Never expose `SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY`, or `GROQ_API_KEY` to client components or `NEXT_PUBLIC_*` variables.
+## Current authenticated plumbing
 
-## Database migration
+- GET /api/history returns the authenticated user's existing scan rows in reverse chronological order.
+- DELETE /api/history/:id deletes only the authenticated user's scan row.
+- POST /api/scan is reserved for the ApetitScan identification contract and returns a temporary rebuilding response until Unit 7.
 
-`supabase/migrations/202609270002_profiles_auth_rls.sql` adds the Auth-backed `profiles` table, adds persisted `flags` to scans, moves the legacy ownership foreign keys to `auth.users`, and enables owner-scoped RLS policies. The original migration is intentionally unchanged.
+## Planned ApetitScan endpoints
 
-## Unit 3 authentication
+The Unit 2-10 contracts are defined in context/2-architecture.md. They include /api/scan, /api/estimate, /api/buffer, /api/correct, and the history response update. The retired allergen-era /api/match and /api/ask-cook endpoints are intentionally absent.
 
-`/signup` creates a Supabase email/password account and a matching `profiles` row when a session is immediately available. If email confirmation is enabled, `/auth/callback` exchanges the confirmation code and creates the profile row. `/login` signs users in. Middleware protects `/home`, `/scan`, `/history`, and `/profile`, redirecting unauthenticated visitors to `/login`.
+## Naming and data boundary
 
-## Unit 4 verified dish
+ApetitScan uses Supabase Auth, Next.js API routes, Gemini with Groq fallback, and the existing blue visual tokens. Legacy tables remain untouched and are not referenced by the new application code.
+## Unit 2 migration
 
-`supabase/migrations/202609270003_seed_egusi_soup.sql` adds the first hand-reviewed `dish_cache` record: Egusi soup. Its ingredient tiers and shellfish variation were cross-checked against [Koki Afrique](https://kokiafrique.com/en/dishes/egusi-soup/), [Food Network Kitchen](https://www.foodnetwork.com/recipes/food-network-kitchen/egusi-stew-12347892), [My Nigerian Food](https://mynigerianfood.co.uk/nigerian-recipes/nigerian-soups/egusi-soup), and [Boston Medical Center](https://www.bmc.org/recipes/egusi-soup). The seed is idempotent and does not write any LLM output.
-
-## Unit 5 AI wrapper
-
-`lib/ai/identifyDish.ts` exposes `identifyDish(image)`. It calls Gemini first using the server-only `GEMINI_API_KEY`; any provider error or invalid response triggers the same request shape against Groq using `GROQ_API_KEY`. The caller receives structured ingredients and `source: "llm_fallback"`; provider keys never enter client code. Defaults are `gemini-2.5-flash` and `qwen/qwen3.8-27b`; set `GEMINI_MODEL` and `GROQ_MODEL` in `.env.local` to override them.
-
-## Unit 6 scan endpoint
-
-`POST /api/scan` requires a Supabase Auth session and multipart `image`. An optional `dish` field is used by the verified demo flow to look up `dish_cache`; only `verified = true` rows are eligible for a cache hit. Cache hits skip both AI providers. Cache misses call `identifyDish`, return `source: "llm_fallback"`, and never write the result into `dish_cache`. Every successful scan inserts an owned `scans` row with the profile-specific matched flags.
-
-## Units 7-12 matching, history, profile, and pages
-
-`POST /api/match` remains a pure local matcher, and `POST /api/ask-cook` produces one question per flag. The scan endpoint accepts the authenticated profile's allergen list and stores returned flags and possible ingredients with the scan. `GET /api/history` lists the current user's scans, including stored ingredients, in reverse chronological order. `DELETE /api/history/:id` deletes only the current user's row; RLS remains the database-level boundary. Authenticated UI routes now include `/scan`, `/history`, and `/profile`; `/profile` reads and updates `allergy_profiles` with the browser-safe Supabase client.
-
-## Unit 13 design pass
-
-All seven routes share the PetitScan visual language: ice blue, cobalt, navy, responsive spacing, shared authenticated navigation, keyboard focus states, hover transitions, loading states, and a dedicated empty history state. `/scan` announces “Identifying dish…” followed by “Checking ingredients…”.
-
-## Units 14-15 verified dishes and security pass
-
-`supabase/migrations/202609270004_seed_jollof_moin_moin.sql` adds hand-reviewed, verified records for Jollof rice and Moin Moin. The Jollof data was cross-checked against [Food Network Kitchen](https://www.foodnetwork.com/recipes/food-network-kitchen/nigerian-jollof-rice-19493519) and [Nigerian Food TV](https://www.nigerianfoodtv.com/jollof-rice-how-to-cook-nigerian-jollof/). The Moin Moin data was cross-checked against [Nigerian Food TV](https://www.nigerianfoodtv.com/nigerian-moi-moi-how-to-make-nigerian/), [Lounje](https://lounje.ng/recipes/cookbook-002), and [Koki Afrique](https://kokiafrique.com/en/dishes/moi-moi/). Unit 15 audits safety language, server-only keys, fallback cache boundaries, and RLS assumptions.
-
-`supabase/migrations/202609270005_fix_auth_foreign_keys.sql` corrects databases where the legacy `scans_user_id_fkey` or `allergy_profiles_user_id_fkey` remained after the Auth retrofit. It does not delete rows or modify earlier migrations.
-
-## Unit 17 ingredient and nutrition view
-
-`supabase/migrations/202609280001_scan_ingredients.sql` adds an `ingredients` JSONB column to `scans` so history can revisit possible ingredients without rerunning the scan. Scan results group ingredients by their `always`, `commonly`, and `sometimes` tiers. The nutrition panel reports only qualitative ingredient-based cues and general meal-balance tips; it does not invent calories or macro grams because photo scans do not include portion sizes or recipe quantities. This is general food information, not individualized or medical advice. General balance guidance follows the [WHO healthy diet principles](https://www.who.int/news-room/fact-sheets/detail/healthy-diet).
-
-## `POST /api/scan`
-Multipart form data: `image` (file), optional `dish` (demo dish name), optional `allergens` (JSON string array). Returns `{ scanId, dishName, source, ingredients, flags }`, where `source` is `cache` or `llm_fallback`. Each ingredient has `ingredient`, `tier`, `allergenCategory`, and optional `regionalNote`.
-
-## `POST /api/match`
-JSON body: `{ ingredients: DishIngredient[], allergens: string[] }`. Returns `{ flags: Flag[] }`. This endpoint makes no external calls.
-
-## `POST /api/ask-cook`
-JSON body: `{ flags: { ingredient, tier }[] }`. Returns `{ questions: { ingredient, question }[] }`, one question for each input flag.
-
-## Manual test
-Run `npm install`, then `npm run dev`. Upload a photo, select a profile, and scan one of the three demo dishes. Confirm the result has a visible `Verified` label, tiered flags, and an “Ask the cook” question for every flag. Selecting “Something else” demonstrates the visible `Estimated` path.
+supabase/migrations/202609290001_apetitscan_schema.sql is additive. It creates foods, food_nutrition, and scan_corrections; adds the ApetitScan result fields to scans; relaxes the legacy scans.source required constraint so new inserts are not forced to claim an allergen-era source; and adds indexes, range checks, and authenticated-user RLS policies. No legacy table or column is dropped or modified.

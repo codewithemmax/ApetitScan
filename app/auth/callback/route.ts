@@ -25,7 +25,7 @@ export async function GET(request: Request) {
   if (user) {
     await supabase.from("profiles").upsert({
       id: user.id,
-      display_name: (user.user_metadata.display_name as string | undefined) ?? user.email?.split("@")[0] ?? "PetitScan user",
+      display_name: (user.user_metadata.display_name as string | undefined) ?? user.email?.split("@")[0] ?? "ApetitScan user",
     });
   }
 

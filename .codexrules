@@ -1,21 +1,28 @@
-# PetitScan — Full-Stack Agent Rules
+# ApetitScan — Full-Stack Agent Rules
 
-Read `context/1-project-overview.md` through `context/7-units.md` before writing any code. Full detail lives there; this file is the always-loaded summary.
+Read `context/1-project-overview.md` through `context/7-units.md` before writing any code. Full detail lives there; this file is the always-loaded summary. ApetitScan replaces the earlier allergy-scanner concept; ignore any allergen-era logic, copy, or endpoints you find in the repo.
 
 ## Non-negotiable
-* Never output or imply that a dish "is safe," "is allergen-free," or "does not contain" an allergen. Only "commonly contains," "sometimes contains," or "not typically found in this dish." See `context/3-ui-context.md`.
-* Every result must show an "ask the cook" question for each flagged allergen. The flag alone is never returned without it.
-* Every result must be labeled `Verified` (from `dish_cache`) or `Estimated` (LLM fallback). Never blend the two without a visible distinction.
+* Never give false precision. Portion uncertain: show a range. Food uncertain: ask. Preparation uncertain: disclose it. Every estimate is labeled as an estimate.
+* Never claim or imply glucose measurement or prediction, diagnosis, disease prediction, or a guaranteed effect ("drops your spike by 15%"). The app estimates carbohydrate exposure only. See `context/3-ui-context.md`, including its grep list of forbidden terms.
+* Carbohydrates are always a range (`X–Y g`), never a single number. No exact food weight or palm-oil quantity from a photo.
+* Every Sugar Spoon Index and Meal Impact value carries the disclaimer (`DISCLAIMER_TEXT`: "This is an estimate of carbohydrate exposure, not a glucose measurement.") shown on screen in the same card, not buried in settings.
+* The vision model identifies only. It never supplies nutrition numbers. Every carbohydrate number comes from a hand-verified `food_nutrition` row with a `source_note`. No row, no number: ask the user instead.
+* Every uncertain step (food, portion, preparation) becomes a question or a disclosed assumption, and every one has a user correction path.
+* Buffer Engine suggestions are gated by "meal already prepared?". If yes, never offer Prepare actions or "replace" wording; use Adjust and Recover only.
+* Corrections and model output are never auto-written into `foods` or `food_nutrition`. Those tables only grow through manual review.
 * API keys (Gemini, Groq, Supabase service role) never reach client-side code. Only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are allowed in the browser bundle.
-* Unverified LLM fallback output is never auto-written into `dish_cache`. That table only grows through manual review.
-* Migrations are additive only. Never modify an applied migration or delete data.
-* Live demo photos come only from dishes in `dish_cache` with `verified: true`. The LLM fallback path is tested privately, never performed live in front of judges.
+* Migrations are additive only. Never modify an applied migration, drop a table or column, or delete data. Legacy allergen tables (`dish_cache`, `dish_ingredients`, `allergy_profiles`) stay in place, untouched and unused.
+* Live demo photos use only foods and preparations that have verified `food_nutrition` rows. Test both demo plates privately first, and keep a backup screen recording.
+* Do not build: glucose measurement, diagnosis, disease prediction, HMO integration, CGM, payments or premium tiers, the B2B API, or a large food database.
 
 ## Working style
-* One atomic unit at a time, from `context/7-units.md`, in order. Do not skip ahead or batch units.
-* If a requirement conflicts with the context files or a detail is missing, stop and ask. Do not assume.
-* Document every new endpoint, model, or migration in `API.md` as you build it.
-* Before every push: `git diff --check`, `git status --short`, and the relevant build/test.
+* One atomic unit at a time, from `context/7-units.md`, in order. Do not skip ahead or batch units. If time runs short, follow the cut line in that file.
+* If a requirement conflicts with the context files or a detail is missing, stop and ask. Do not assume. Where a value is marked "confirm", use the documented default from `lib/config` and record it in `API.md` and `context/6-progress-tracker.md`.
+* Retiring the allergen UI, `/api/match`, `/api/ask-cook`, and old product naming happens in Unit 1 only. No other broad deletion or refactor without being asked.
+* Document every new endpoint, model, migration, and tunable rule in `API.md` as you build it.
+* Update `context/6-progress-tracker.md` at the end of every unit.
+* Before every push: `git diff --check`, `git status --short`, and the relevant test plus a standalone `tsc --noEmit` (the full production build has not finished in the constrained workspace; run it on deploy).
 
 ## Target
-Working end-to-end demo for StacStart's Borderless Bytes hackathon, submission deadline September 28, 2026, 11:59 PM WAT. See `context/1-project-overview.md` for the full release gate.
+Working end-to-end demo of the two demo plates for StacStart's Borderless Bytes hackathon, submission deadline September 30, 2026 (confirm the cutoff time). See `context/1-project-overview.md` for the success criteria.

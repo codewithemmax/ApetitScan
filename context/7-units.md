@@ -2,87 +2,81 @@
 
 Each unit is one atomic step: small enough to build, test, and commit on its own. Build in order. Do not start a unit until the previous one is done and verified against `5-ai-workflow-rules.md`.
 
-## Unit 1: Repo Scaffold
-* Scope: Next.js (App Router) + Tailwind project created. Supabase project created with Auth enabled (email + password). Free-tier Gemini key (Google AI Studio) and free-tier Groq key obtained, no billing enabled anywhere.
-* Done when: `npm run dev` runs a blank app, and all env vars from `2-architecture.md` are set locally in `.env.local` (not committed).
+The deadline is September 30, 2026, so this list is short and reuses what PetitScan already built (Supabase Auth, route protection, history plumbing, Gemini/Groq fallback, blue design tokens). Numbering restarts for ApetitScan; the old PetitScan units are retired.
+
+## Cut Line (If Time Runs Out)
+Protect first: Units 1-3 and 5-9 and 11, which give the two demo plates end to end with ranges, disclaimer, questions, correction, and Buffer Engine. Cut in this order: extra foods (stretch), history polish, profile page extras, design polish (Unit 12). Never cut: ranges, the on-screen disclaimer, ask-instead-of-guess, the correction flow, verified data for both plates.
+
+## Unit 1: Pivot Audit and Legacy Freeze
+* Scope: Audit the repo against these context files and report the gap list first: what exists (auth pages, history, provider wrapper, tokens) versus what is missing. Then retire the allergen UI, the `/api/match` and `/api/ask-cook` routes, and allergen-era copy, and rename PetitScan to ApetitScan in UI strings, metadata, package name, README, and `.codexrules`. Do not touch database tables.
+* Done when: The gap list is reported, no allergen screen or route is reachable, the app name reads ApetitScan everywhere, and a standalone type check passes.
 * Depends on: none.
 
-## Unit 2: Database Schema and Row Level Security
-* Scope: Additive migration creating `profiles`, `allergy_profiles`, `dish_cache`, `dish_ingredients`, `scans`, exactly as defined in `2-architecture.md`. RLS policies on `allergy_profiles` and `scans` scoped to `auth.uid()`.
-* Done when: Migration applies cleanly, foreign keys enforced, `dish_cache.dish_name` is unique, and a manual test confirms one user cannot read or delete another user's `scans` or `allergy_profiles` rows.
+## Unit 2: Schema Migration and Row Level Security
+* Scope: One new additive migration creating `foods`, `food_nutrition`, and `scan_corrections`, adding the new `scans` columns from `2-architecture.md`, relaxing any legacy NOT NULL constraint that blocks new inserts, and adding RLS on `scans` and `scan_corrections` scoped to `auth.uid()`. Legacy tables and columns stay.
+* Done when: The migration applies cleanly, foreign keys and the `food_nutrition` uniqueness constraint are enforced, and a manual test confirms one user cannot read or delete another user's `scans` or `scan_corrections` rows.
 * Depends on: Unit 1.
 
-## Unit 3: Signup and Login Pages
-* Scope: `/signup` and `/login` routes using Supabase Auth. On first signup, create the matching `profiles` row. Route protection: any page other than landing/signup/login redirects to `/login` when there's no session.
-* Done when: A new account can be created, logged out of, and logged back into, and an unauthenticated visit to `/history` or `/scan` correctly redirects to `/login`.
+## Unit 3: Verified Food Data for the Demo Plates
+* Scope: Hand-research and enter `foods` and `food_nutrition` rows for every component of both demo plates: white rice, plantain (fried and boiled), tomato stew, chicken, vegetables, fish. Cover small, medium, and large for each preparation used. Every row needs a `source_note` and an `entry_confidence`; set `gi_category` only with a `gi_source`. Set `verified: true` only after checking. Non-carb components get rows too.
+* Done when: Both plates resolve fully with no missing rows, every row has a source, and at least one preparation choice (fried vs boiled plantain) shows a real difference in data.
 * Depends on: Unit 2.
 
-## Unit 4: First Verified Dish
-* Scope: Hand-research and enter the ingredient/allergen data for one dish (candidate: egusi soup) into `dish_cache` and `dish_ingredients`, cross-checked against real recipe sources. Set `verified: true` only after this check.
-* Done when: The data has a tier and allergen category for every ingredient row, and at least one "sometimes" tier ingredient exists to demonstrate the household-variation story.
-* Depends on: Unit 2.
-
-## Unit 5: AI Client Wrappers
-* Scope: `lib/ai/identifyDish.ts` (or equivalent), a single function that calls Gemini, and on a rate-limit or error, retries against Groq. Callers never see which provider answered, only the result and a `source` field.
-* Done when: Manually forcing a Gemini failure (e.g. a bad key) correctly falls through to Groq and still returns a result.
+## Unit 4: Vision Wrapper
+* Scope: `lib/ai/identifyMeal.ts`, a single function that calls Gemini and, on a rate-limit or error, retries against Groq. It returns components with food, portion guess, preparation guess, and per-step confidence, validated from `unknown`. The prompt asks for identification only and never for nutrition numbers. Callers never see which provider answered.
+* Done when: A photo of each demo plate returns the expected components, forcing a Gemini failure (a bad key) falls through to Groq, and a malformed response produces a clear error.
 * Depends on: Unit 1.
 
-## Unit 6: Scan Endpoint
-* Scope: `POST /api/scan`. Accepts an image, checks `dish_cache` first, falls back to Unit 5's wrapper on a cache miss, returns dish name, ingredients, and `source`. Writes a `scans` row for the authenticated user.
-* Done when: A photo of the Unit 4 dish returns `source: "cache"` with the correct verified data and a `scans` row appears for that user; a photo of anything else returns `source: "llm_fallback"`.
-* Depends on: Unit 2, Unit 3, Unit 4, Unit 5.
+## Unit 5: Nutrition Engine and Sugar Spoon Index
+* Scope: `lib/services/nutrition.ts` and `sugarSpoon.ts`, plus `lib/config` values. Pure functions: confirmed components in, per-component and total carbohydrate ranges out, then the spoon range. Handles unconfirmed portion (widen the range) and unconfirmed preparation (disclose the assumption). Returns no number for a food with no verified row. Tests use the demo-plate fixtures.
+* Done when: Both plates produce sensible ranges, the range widens when portion is left unconfirmed, and a food with no row returns no number and a clear "ask" signal.
+* Depends on: Unit 3.
 
-## Unit 7: Match Endpoint
-* Scope: `POST /api/match`. Pure function: dish ingredients plus a user's allergy profile in, tiered flags out. No external API calls.
-* Done when: Given the Unit 4 dish and a profile with a matching allergen, returns the correct flags at the correct tiers.
-* Depends on: Unit 4.
+## Unit 6: Confidence Engine and Meal Impact
+* Scope: `lib/services/confidence.ts` and `mealImpact.ts`. Confidence Engine scores vision, portion, and nutrition separately and combines them (overall equals the lowest). Meal Impact returns Low / Moderate / High plus `drivers`, with thresholds and modifiers in `lib/config`, each with a documented basis. Straddling a band boundary lowers confidence and is flagged. Tests use the demo-plate fixtures.
+* Done when: Plate 1 returns High and plate 2 returns a clearly lower band, the drivers explain why, and an uncertain input lowers the confidence percentage.
+* Depends on: Unit 5.
 
-## Unit 8: Ask-Cook Endpoint
-* Scope: `POST /api/ask-cook`. Flagged ingredients in, one plain-language question per flag out.
-* Done when: Every flag from Unit 7 produces exactly one clear question, no flag is silently dropped.
-* Depends on: Unit 7.
+## Unit 7: Scan Endpoint
+* Scope: `POST /api/scan`. Accepts an image, calls Unit 4's wrapper, builds the `questions` list for anything below its ask-threshold (portion chips, preparation choice, or "name the main carbohydrate" for an unidentified dish), and writes a `scans` row for the authenticated user with the right `status`.
+* Done when: Each demo plate returns its components with the expected questions, an unidentifiable photo asks for the main carbohydrate, and a `scans` row appears for that user.
+* Depends on: Unit 2, Unit 4, Unit 6.
 
-## Unit 9: History Endpoints
-* Scope: `GET /api/history` (list, most recent first, scoped to `auth.uid()`), `DELETE /api/history/:id` (owner-only).
-* Done when: A user sees only their own scans, in the right order, and deleting one removes it without affecting other users' rows.
-* Depends on: Unit 6.
+## Unit 8: Estimate Endpoint
+* Scope: `POST /api/estimate`. Confirmed components in, full estimate out per the response contract in `2-architecture.md` (ranges, spoons, impact, confidence breakdown, drivers, assumptions, disclaimer). Updates the scan row.
+* Done when: Both demo plates return the documented shape, every response includes `disclaimer`, and no single-number carbohydrate value appears.
+* Depends on: Unit 5, Unit 6, Unit 7.
 
-## Unit 10: Home and Profile Pages (Frontend)
-* Scope: `/` (post-login home, primary "scan a dish" action) and `/profile` (manage the user's allergen list, reads/writes `allergy_profiles`).
-* Done when: A logged-in user can add or remove an allergen and it's reflected on the next scan's matching.
-* Depends on: Unit 3, Unit 7.
+## Unit 9: Buffer and Correction Endpoints
+* Scope: `POST /api/buffer` (takes `meal_prepared`, returns ranked Prepare / Adjust / Recover actions per the feasibility order, with Prepare actions removed when the meal is prepared) and `POST /api/correct` (stores a row in `scan_corrections` for the owner, applies it to that scan, and recomputes the estimate). Corrections never touch `foods` or `food_nutrition`.
+* Done when: Plate 1 with `meal_prepared: true` returns Adjust actions (reduce rice, add vegetables or protein) and no "replace" wording, a correction changes the recomputed estimate, and the correction row exists and is owner-scoped.
+* Depends on: Unit 8.
 
-## Unit 11: Photo Capture and Results (Frontend)
-* Scope: `/scan` route. `PhotoCapture` component (single primary action, take or upload), then `ResultCard`, `AllergenFlag`, `AskCookQuestion` components. Dish name and source label (Verified/Estimated) at top, flags grouped by tier, one question per flag, a visible non-alarming disclaimer line.
-* Done when: The full flow, photo in to questions out, works end to end for the Unit 4 dish, and the safety-language checklist in `5-ai-workflow-rules.md` passes on every string shown.
-* Depends on: Unit 6, Unit 7, Unit 8, Unit 10.
+## Unit 10: History Endpoints
+* Scope: Update `GET /api/history` (most recent first, scoped to `auth.uid()`) to return impact, carbohydrate range, spoon range, and timestamp, and confirm `DELETE /api/history/:id` (owner-only) still works with the new columns.
+* Done when: A user sees only their own scans in the right order, older PetitScan rows do not break the response, and deleting one scan does not affect other users' rows.
+* Depends on: Unit 8.
 
-## Unit 12: History Page (Frontend)
-* Scope: `/history` route. List of past scans (dish, date, source label, flag summary), tap through to view the full result again.
-* Done when: A scan performed in Unit 11 appears in `/history` immediately after, and tapping it shows the same result as the original scan.
-* Depends on: Unit 9, Unit 11.
+## Unit 11: Scan Flow (Frontend)
+* Scope: `/scan`. `PhotoCapture` (single primary action, take or upload), `ClarifyPrompt` with `PortionPicker` and `PreparationPicker` for each open question, `MealPreparedPrompt`, `MealImpactCard` with `SugarSpoonMeter`, `ConfidenceBreakdown`, and `EstimateDisclaimer` in the same card, and `BufferActions`. Loading states that name what is happening ("Identifying foods...", then "Estimating carbohydrates..."). Every assumption is shown and changeable.
+* Done when: The full flow, photo in to Buffer actions out, works on both demo plates on a phone screen, the disclaimer is visible without any tap, ranges are the only carbohydrate format shown, and the checklist in `5-ai-workflow-rules.md` passes on every string.
+* Depends on: Unit 7, Unit 8, Unit 9.
 
-## Unit 13: Design Pass
-* Scope: A real visual identity, not default Tailwind gray. Pick a palette and type pairing that fits a food-safety app (calm, trustworthy, not clinical), consistent spacing and motion across all seven pages, a proper empty state for `/history` before a first scan exists, a proper loading state for `/scan` that names what's happening ("Identifying dish...", then "Checking ingredients..."). This is the pass that makes it look like a shipped product, not a hackathon scaffold.
-* Done when: Every page shares the same visual language, nothing looks like a placeholder, and the flow feels intentional end to end on a phone screen.
-* Depends on: Unit 3, Unit 10, Unit 11, Unit 12.
+## Unit 12: Home, History, Profile, and Design Pass (Frontend)
+* Scope: `/` with the primary "scan a meal" action, `/history` showing each scan's date, impact, and spoon range (with an empty state before the first scan) and tap-through to the full saved result, `/profile` with display name and sign out. Apply the existing blue visual system consistently, with no placeholder-looking screens.
+* Done when: Every page shares one visual language, a scan from Unit 11 appears in `/history` immediately and reopens to the same result, and the flow feels intentional end to end on a phone.
+* Depends on: Unit 10, Unit 11.
 
-## Unit 14: Expand Verified Dishes
-* Scope: Repeat Unit 4 for 2-4 more dishes (candidates: jollof rice, moin moin), same hand-verification standard.
-* Done when: 3-5 total dishes are `verified: true` with real, checked data.
-* Depends on: Unit 4, Unit 13 (so the full flow and its design are already proven on one dish before scaling data entry).
+## Unit 13: Safety and Credibility Pass
+* Scope: Run the grep list from `3-ui-context.md` across the codebase, every prompt template, and every user-facing string, and fix any hit. Confirm no API key reaches client-side code. Test that RLS actually blocks cross-user access. Confirm the demo does not surface anything from the "Explicitly Do Not Build" list.
+* Done when: Every item in the verification checklist in `5-ai-workflow-rules.md` passes across both demo plates.
+* Depends on: Unit 12.
 
-## Unit 15: Safety and Security Pass
-* Scope: Grep the full codebase and every AI prompt template for "safe," "does not contain," "guaranteed," and any numeric certainty claim, remove or rewrite any that slipped in. Confirm no API key reaches client-side code. Confirm RLS policies actually block cross-user access, don't just trust that they're enabled.
-* Done when: Every checklist item in `5-ai-workflow-rules.md` passes across all cached dishes.
-* Depends on: Unit 13, Unit 14.
+## Unit 14: Deploy, Documentation, and Demo Rehearsal
+* Scope: Deploy to Vercel (Hobby tier). Finish `API.md` with every endpoint's request/response shape, the engine rules and thresholds with their basis, and manual test steps. Rehearse the demo script on a phone using both real plates, in order, and record a backup screen capture in case a provider rate-limits during judging. Prepare pitch points for Phase 1, Phase 2, and the moat, leaving Phase 3 out.
+* Done when: The deployed link works end to end on a phone from signup through scan, correction, Buffer, and history; a reviewer could exercise the flow from `API.md` alone; and the backup recording exists.
+* Depends on: Unit 13.
 
-## Unit 16: Deploy and Documentation
-* Scope: Deploy to Vercel (Hobby tier). Finish `API.md` with every endpoint's request/response shape and manual test steps.
-* Done when: The deployed link works end to end on a phone, from signup through scan through history, and a reviewer could exercise the whole flow from `API.md` alone.
-* Depends on: Unit 15.
-
-## Unit 17: Ingredient and Nutrition View
-* Scope: Display each scan's possible ingredients grouped by tier, add qualitative nutrition cues without unsupported numeric calorie/macro estimates, persist ingredients for scan history with an additive migration, and shift the shared visual palette to blue.
-* Done when: A scan and its history entry show the tiered ingredient list and cautious nutrition guidance; no exact calories or macro grams are fabricated; existing allergy questions and Verified/Estimated labels remain visible; all routes use the blue palette.
-* Depends on: Units 6, 9, 11, 12, and 13.
+## Stretch (Only After Unit 14)
+* Add more verified staples (candidates, confirm: jollof rice, eba or garri, yam, beans, moin moin), same hand-verification standard.
+* Count-based pattern note from history ("you've scanned rice-heavy meals three times this week"), with no health claims.
