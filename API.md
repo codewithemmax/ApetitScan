@@ -72,4 +72,25 @@ The route requires authentication and accepts JSON in this shape:
 
 The component IDs must exactly match the owner’s saved scan; client-supplied nutrition values are ignored/not accepted. Foods must exactly match a verified catalogue record. The route reads that food’s verified `food_nutrition` rows, runs the pure Unit 5-6 functions, and updates only the owner’s scan. A missing/unverified row returns `status: needs_input`, a clarification question, and no carbohydrate, spoon, or impact values. When portion/preparation remains unconfirmed but a supported range can be formed, the estimate includes the widened range, disclosed assumptions, and questions; its status stays `needs_input` until clarified.
 
-Successful estimates return `{ scan_id, status, components, total_carbs_g, sugar_spoons, meal_impact, confidence, drivers, assumptions, questions, range_straddles_band, boundary_note, disclaimer }`. `components` include each carbohydrate range and verified source note. All responses containing estimate values include the exact disclaimer. Errors: 401 unauthenticated, 400 invalid request/component set, 404 scan not found or not owned, 409 no identified scan components, 503 catalogue read failure, and 500 persistence failure. Manual acceptance: try both demo plates, verify ranges trace to seeded rows and both receive the disclaimer, test a missing verified row returns no number, and confirm one user cannot estimate another user’s scan.
+Successful estimates return `{ scan_id, status, components, total_carbs_g, sugar_spoons, meal_impact, confidence, drivers, assumptions, questions, range_straddles_band, boundary_note, disclaimer }`. `components` include each carbohydrate range and verified source note. All responses containing estimate values include the exact disclaimer. Errors: 401 unauthenticated, 400 invalid request/component set, 404 scan not found or not owned, 409 no identified scan components, 503 catalogue read failure, and 500 persistence failure. Manual acceptance: try both demo plates, verify ranges trace to seeded rows and both receive the disclaimer, test a missing verified row returns no number, and confirm one user cannot estimate another user's scan.
+
+## Unit 9 `POST /api/buffer`
+
+Requires authentication. Request: `{ "scan_id": "<scan UUID>", "meal_prepared": true }`. The scan must belong to the caller and have a complete estimate. The response is `{ scan_id, meal_prepared, actions }`; each action has a feasibility `rank`, `group` (`Prepare`, `Adjust`, or `Recover`), `title`, and `description`. Actions are saved to the owner’s scan together with `meal_prepared`. When the meal is already prepared, Prepare actions are omitted; suggestions are to serve a smaller rice portion where applicable, add vegetables or protein if available, consider light activity after eating, and keep the meal in mind next time. Suggestions make no numeric or guaranteed effect claim. Errors include 401 unauthenticated, 400 invalid request, 404 missing/not-owned scan, 409 estimate not complete, and 500 persistence failure.
+
+## Unit 9 `POST /api/correct`
+
+Requires authentication. Request:
+
+```json
+{
+  "scan_id": "<scan UUID>",
+  "component_id": "<ID returned by /api/scan>",
+  "step": "portion",
+  "corrected": "large"
+}
+```
+
+`step` is `food`, `main_carbohydrate`, `portion`, or `preparation`; `corrected` is a verified catalogue food name, a supported main-carbohydrate name, `small` / `medium` / `large`, or an available preparation label, respectively. The route verifies scan ownership and component membership, writes an owner-scoped `scan_corrections` audit row, applies the correction only to that scan, then recomputes from verified `food_nutrition` rows using the same shared calculation as `/api/estimate`. It never writes to `foods` or `food_nutrition`. The response contains the correction ID, updated components/status, and, when available, recalculated ranges, confidence, impact, assumptions, questions, and disclaimer. If the correction leaves an unsupported or ambiguous nutrition input, the estimate is cleared and the response asks for clarification rather than inventing a value. Errors include 401 unauthenticated, 400 invalid/unsupported correction, 404 missing/not-owned scan, 503 verified catalogue read failure, and 500 persistence failure.
+
+Manual acceptance for Unit 9: on Plate 1 request Buffer with `meal_prepared: true`, confirm only Adjust/Recover groups appear; correct the rice portion and confirm the saved scan's range is recomputed and a `scan_corrections` row is created; confirm another user cannot correct the scan. Both endpoints use authenticated owner-scoped queries and Unit 2 database RLS policies.

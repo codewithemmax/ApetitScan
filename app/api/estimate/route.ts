@@ -1,15 +1,12 @@
 import { NextResponse } from "next/server";
 import { createClient } from "../../../lib/supabase/server";
-import { calculateConfidence, type ConfidenceComponentInput } from "../../../lib/services/confidence";
-import { calculateMealImpact, type MealComponentCategory } from "../../../lib/services/mealImpact";
+import type { MealComponentCategory } from "../../../lib/services/mealImpact";
 import {
-  calculateNutrition,
   type FoodNutritionEntry,
-  type NutritionComponentInput,
   type PortionGuess,
 } from "../../../lib/services/nutrition";
 import { DISCLAIMER_TEXT } from "../../../lib/services/nutritionConfig";
-import { toSugarSpoonRange } from "../../../lib/services/sugarSpoon";
+import { buildEstimateResult } from "../../../lib/services/estimateResult";
 
 const PORTIONS = new Set<PortionGuess>(["small", "medium", "large", "uncertain"]);
 const CATEGORIES = new Set<MealComponentCategory>(["carb_staple", "protein", "vegetable", "stew_soup", "other"]);
@@ -252,42 +249,10 @@ export async function POST(request: Request) {
     }, 200);
   }
 
-  const nutritionInputs: NutritionComponentInput[] = input.components.map((component) => ({
-    component_id: component.component_id,
-    food: matchedFoods.get(component.component_id)!.name,
-    portion: component.portion,
-    portion_confirmed: component.portion_confirmed,
-    preparation: component.preparation,
-    preparation_confirmed: component.preparation_confirmed,
-  }));
-  const estimate = calculateNutrition(nutritionInputs, entries);
-  const currentComponents = input.components.map((component) => {
-    const stored = storedById.get(component.component_id)!;
-    const food = matchedFoods.get(component.component_id)!;
-    const calculated = estimate.components.find((item) => item.component_id === component.component_id)!;
-    return {
-      component_id: component.component_id,
-      food: food.name,
-      food_id: food.id,
-      category: food.category,
-      food_verified: true,
-      food_confirmed: component.food_confirmed,
-      portion: component.portion,
-      portion_confirmed: component.portion_confirmed,
-      preparation: calculated.preparation ?? component.preparation,
-      preparation_confirmed: component.preparation_confirmed,
-      confidence: stored.confidence,
-      requires_confirmation: {
-        food: false,
-        portion: !component.portion_confirmed,
-        preparation: !component.preparation_confirmed,
-      },
-      carbs_g: calculated.carbs_g,
-      entry: calculated.entry,
-    };
-  });
+  const estimateResult = buildEstimateResult(input.components, storedComponents, matchedFoods, entries);
+  const currentComponents = estimateResult.components;
 
-  if (!estimate.ready || !estimate.total_carbs_g) {
+  if (!estimateResult.ready) {
     const { data: updatedScan, error: updateError } = await supabase.from("scans").update({
       status: "needs_input",
       components: currentComponents,
@@ -304,42 +269,24 @@ export async function POST(request: Request) {
       scan_id: input.scan_id,
       status: "needs_input",
       components: currentComponents,
-      questions: estimate.questions,
-      assumptions: estimate.assumptions,
+      questions: estimateResult.questions,
+      assumptions: estimateResult.assumptions,
       disclaimer: DISCLAIMER_TEXT,
     });
   }
 
-  const confidenceInputs: ConfidenceComponentInput[] = estimate.components.map((component) => {
-    const requested = input.components.find((item) => item.component_id === component.component_id)!;
-    const stored = storedById.get(component.component_id)!;
-    if (!component.carbs_g || !component.entry) throw new Error("The nutrition estimate is missing a verified component range.");
-    return {
-      confidence: stored.confidence,
-      portion_confirmed: requested.portion_confirmed,
-      nutrition_entry_confidence: component.entry.entry_confidence,
-      carbs_g: component.carbs_g,
-    };
-  });
-  const confidence = calculateConfidence(confidenceInputs);
-  const impact = calculateMealImpact(estimate.total_carbs_g, input.components.map((component) => {
-    const food = matchedFoods.get(component.component_id)!;
-    const calculated = estimate.components.find((item) => item.component_id === component.component_id)!;
-    return { food: food.name, category: food.category, preparation: calculated.preparation };
-  }));
-  const spoons = toSugarSpoonRange(estimate.total_carbs_g);
-  const status = estimate.questions.length > 0 ? "needs_input" : "complete";
+  const status = estimateResult.questions.length > 0 ? "needs_input" : "complete";
 
   const { data: updatedScan, error: updateError } = await supabase.from("scans").update({
     status,
     components: currentComponents,
-    carbs_low_g: estimate.total_carbs_g.low,
-    carbs_high_g: estimate.total_carbs_g.high,
-    spoons_low: spoons.low,
-    spoons_high: spoons.high,
-    meal_impact: impact.meal_impact,
-    confidence_overall: Math.round(confidence.overall),
-    confidence_breakdown: confidence,
+    carbs_low_g: estimateResult.total_carbs_g.low,
+    carbs_high_g: estimateResult.total_carbs_g.high,
+    spoons_low: estimateResult.sugar_spoons.low,
+    spoons_high: estimateResult.sugar_spoons.high,
+    meal_impact: estimateResult.meal_impact,
+    confidence_overall: Math.round(estimateResult.confidence.overall),
+    confidence_breakdown: estimateResult.confidence,
   }).eq("id", input.scan_id).eq("user_id", user.id).select("id").maybeSingle();
   if (updateError || !updatedScan) return response({ error: "We couldn't save this estimate." }, 500);
 
@@ -347,15 +294,15 @@ export async function POST(request: Request) {
     scan_id: input.scan_id,
     status,
     components: currentComponents,
-    total_carbs_g: estimate.total_carbs_g,
-    sugar_spoons: spoons,
-    meal_impact: impact.meal_impact,
-    confidence,
-    drivers: impact.drivers,
-    assumptions: estimate.assumptions,
-    questions: estimate.questions,
-    range_straddles_band: impact.range_straddles_band,
-    boundary_note: impact.boundary_note,
+    total_carbs_g: estimateResult.total_carbs_g,
+    sugar_spoons: estimateResult.sugar_spoons,
+    meal_impact: estimateResult.meal_impact,
+    confidence: estimateResult.confidence,
+    drivers: estimateResult.drivers,
+    assumptions: estimateResult.assumptions,
+    questions: estimateResult.questions,
+    range_straddles_band: estimateResult.range_straddles_band,
+    boundary_note: estimateResult.boundary_note,
     disclaimer: DISCLAIMER_TEXT,
   });
 }

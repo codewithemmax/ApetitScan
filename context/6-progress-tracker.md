@@ -35,7 +35,8 @@ Update this file after every meaningful implementation change.
 * Unit 6: run fixture acceptance checks for the confidence formula, both demo-plate impact bands, and a boundary-straddling range before marking complete.
 * Unit 7: verify both demo photos, the unidentified-photo question, per-step 70% confirmation prompts, authentication, and scan persistence.
 * Unit 8: verify both demo estimates, disclaimer presence, missing-row ask behavior, and owner-only scan updates.
-* Units 9-10: buffer/correction and history endpoints.
+* Unit 9 code is implemented; verify Buffer feasibility/gating, recalculation after correction, and correction-row owner scoping manually.
+* Unit 10: update the history response and verify owner-only deletion.
 * Units 11-12: scan flow UI, then home, profile, and history rework.
 * Units 13-14: safety and credibility pass, deploy, demo rehearsal.
 
@@ -77,3 +78,4 @@ Update this file after every meaningful implementation change.
 * 2026-09-29 Unit 6: added the clamped minimum-rule confidence engine and midpoint-only impact classification using the user-approved 50 g / 100 g thresholds. Vegetables, protein, and preparation are explanatory drivers only. Boundary straddles are flagged without an additional penalty factor; the specified range-tightness confidence formula applies as written. Documented formulas and threshold basis in `API.md`; fixture acceptance checks remain pending.
 * 2026-09-29 Unit 7: implemented authenticated multipart image handling, verified catalogue/preparation lookup, exact food matching, per-step 70% confirmation questions, unidentified-food fallback question, and RLS-scoped scan persistence. Photos are not retained and no nutrition values are emitted. Documented request/response, limits, threshold basis, and acceptance steps in `API.md`; manual checks remain pending.
 * 2026-09-29 Unit 8: implemented authenticated estimate requests bound to the caller's saved component IDs, verified-row-only nutrition lookups, confidence/impact/spoon calculations, clarification behavior for missing or uncertain inputs, disclaimer inclusion, and owner-scoped scan updates. Documented the JSON contract and manual acceptance checks in `API.md`; acceptance remains pending.
+* 2026-09-29 Unit 9: added authenticated Buffer and correction endpoints. Buffer actions are feasibility-ranked, saved with `meal_prepared`, and omit Prepare actions for already-prepared meals. Corrections validate against verified foods and nutrition preparations, write to `scan_corrections` plus the owner's scan only, and recalculate through the shared estimate builder. Added API contracts and manual acceptance checks; runtime and database acceptance remain pending.
