@@ -211,6 +211,10 @@ export async function POST(request: Request) {
     foods = [];
   }
 
+  if (foods.length === 0) {
+    return failure("No verified food and preparation choices are available yet. Please contact the app team to check the food catalogue.", 503);
+  }
+
   const base64 = Buffer.from(await image.arrayBuffer()).toString("base64");
   let identified: MealComponentIdentification[];
   try {

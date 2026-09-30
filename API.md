@@ -118,3 +118,8 @@ Manual acceptance for Unit 10: verify newest-first ordering and the range fields
 The shared disclaimer is: “This is an estimate from a photo, not a blood glucose measurement. Carbohydrate figures are ranges based on the foods, portions and preparation shown here. Change an assumption and the estimate updates.”
 
 Manual acceptance: on a phone viewport, capture/upload each demo plate, edit an assumption, confirm the estimate and disclaimer, check all three meal-state Buffer outcomes, then confirm the scan appears in History and reopens with the stored ranges and actions.
+
+## Scan catalogue availability
+POST /api/scan returns HTTP 503 with an error message when no verified
+foods with preparation choices are available. It does not return a
+successful scan with empty catalogue options.
