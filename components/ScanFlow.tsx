@@ -168,7 +168,7 @@ export function ScanFlow() {
       const mainOptions = payload.main_carbohydrate_options ?? [];
       const nextDrafts: Record<string, Draft> = {};
       for (const component of payload.components) {
-        const food = isUnknownFood(component.food) ? "" : component.food;
+        const food = !isUnknownFood(component.food) && payload.food_options.includes(component.food) ? component.food : "";
         const prepOptions = payload.preparation_options?.[food] ?? [];
         nextDrafts[component.component_id] = {
           food,

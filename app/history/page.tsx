@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AppHeader } from "../../components/AppHeader";
 import { AppIcon } from "../../components/AppIcon";
@@ -47,6 +47,20 @@ export default function HistoryPage() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [busyId, setBusyId] = useState("");
   const [notice, setNotice] = useState("");
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    if (!selected) return;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const previousOverflow = document.body.style.overflow;
+    if (!dialog.open) dialog.showModal();
+    document.body.style.overflow = "hidden";
+    return () => {
+      dialog.close();
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [selected]);
 
   useEffect(() => {
     void fetch("/api/history").then(async (response) => {
@@ -97,13 +111,13 @@ export default function HistoryPage() {
 
     {scans.some((scan) => scan.total_carbs_g || scan.sugar_spoons || scan.meal_impact) && <p className="mx-auto mt-4 max-w-3xl text-[13px] leading-[19px] text-secondary">{DISCLAIMER_TEXT}</p>}
     {detailLoading && <p role="status" className="mt-4 text-center text-sm text-secondary">Opening saved result…</p>}
-    {selected && detailResult && <div role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelected(null); }} className="fixed inset-0 z-50 flex items-end justify-center bg-ink/35 p-0 sm:items-center sm:p-6">
-      <section role="dialog" aria-modal="true" aria-labelledby="saved-result-title" className="max-h-[92dvh] w-full max-w-xl overflow-y-auto rounded-t-[18px] bg-background p-4 pb-[calc(20px+env(safe-area-inset-bottom))] sm:rounded-[18px] sm:p-6">
+    {selected && detailResult && <dialog ref={dialogRef} aria-labelledby="saved-result-title" onCancel={() => setSelected(null)} onClick={(event) => { if (event.target === event.currentTarget) setSelected(null); }} className="fixed inset-0 m-0 h-full max-h-none w-full max-w-none items-end justify-center border-0 bg-transparent p-0 backdrop:bg-ink/35 open:flex sm:items-center sm:p-6">
+      <section style={{ maxHeight: "calc(100% - 24px)" }} className="w-full max-w-xl overflow-y-auto overscroll-contain rounded-t-[18px] bg-background p-4 pb-[calc(20px+env(safe-area-inset-bottom))] sm:rounded-[18px] sm:p-6">
         <div className="mb-4 flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[.1em] text-secondary">Saved result · {new Date(selected.created_at).toLocaleString()}</p><h2 id="saved-result-title" className="mt-1 text-xl font-semibold">{selected.components?.[0]?.food ?? "Meal scan"}</h2></div><button type="button" autoFocus onClick={() => setSelected(null)} aria-label="Close saved result" className="grid min-h-11 min-w-11 place-items-center rounded-[14px] border border-line bg-white text-secondary"><AppIcon name="close" size={19}/></button></div>
         <MealImpactCard result={detailResult}/>
         <SavedComponentList components={detailResult.components}/>
         {selected.buffer_actions && selected.buffer_actions.length > 0 && <BufferActions actions={selected.buffer_actions}/>}
       </section>
-    </div>}
+    </dialog>}
   </main>;
 }

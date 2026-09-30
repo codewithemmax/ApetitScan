@@ -83,3 +83,13 @@ Update this file after every meaningful implementation change.
 * 2026-09-29 Unit 10: updated authenticated history to return owner-scoped scans newest first with Meal Impact, carbohydrate and Sugar Spoon ranges, status, and timestamp; older rows with absent/invalid estimate bounds safely return null ranges. Tightened owner-only deletion to return 404 for missing or non-owned scans while retaining RLS enforcement. Documented response shapes and manual acceptance steps; database acceptance remains pending.
 * 2026-09-30 Units 11-12: implemented scan flow and shared responsive screens, palette, saved history detail, and exact result disclaimer. Phone-sized visual and end-to-end acceptance remain pending.
 * 2026-09-30 Unit 13 pass: scanned app/components/lib for prohibited safety and credibility wording; remaining matches are the exact approved disclaimer, required "not medical advice" footer, code identifiers, or safe-area CSS. Confirmed the active AI prompt is identification-only and provider keys are only read from server-side environment names; public env references are the approved Supabase URL/anon key. Mocked Gemini 429 -> Groq success and both-provider failure paths pass. Fixed Home disclaimer gating for impact/range data. RLS policies and owner filters were reviewed, but cross-user database behavior is not runtime-verified because no Supabase CLI/test identities are available. No production client JS bundles were generated for bundle-level secret scanning.
+
+## Frontend fixes, September 30
+* Clear photo food guesses that are absent from the verified dropdown options.
+* Return a clear 503 response when no usable food/preparation catalogue exists.
+* Use a native dialog for history details, with background scroll locking,
+  keyboard dismissal, focus containment, and viewport-compatible sizing.
+* TypeScript and whitespace checks passed. Local homepage returned HTTP 200.
+* Signup remains blocked by an Invalid API key response.
+* Dropdown and saved-history runtime verification remain pending.
+* Local WASM compiler workaround is confined to ignored node_modules.
