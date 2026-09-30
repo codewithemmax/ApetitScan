@@ -1,66 +1,54 @@
-# API Response & Safety Language Context
+# Product Language and Visual System Context
 
-This file covers the words, labels, and claims the API and frontend are allowed to produce. Since this is a single-repo, full-stack build, these rules bind both the API responses and the components that render them, they are not split by role.
+This file binds API responses, AI prompt templates, and every user-visible string and screen. It is a single-repo full-stack build, so these rules apply equally to backend copy and frontend components.
 
 ## Core Public Language
-"ApetitScan estimates the carbohydrate load of your meal from a photo, asks when it isn't sure, and suggests realistic ways to balance it. It is an estimate, not a glucose measurement."
-
-## Required Disclaimer (Exact Text)
-`This is an estimate of carbohydrate exposure, not a glucose measurement.`
-
-* Defined once as a shared constant (`DISCLAIMER_TEXT`) and returned in the `disclaimer` field of every response that contains a Sugar Spoon or Meal Impact value.
-* Rendered on screen, in the same card as the Sugar Spoon Index and the Meal Impact profile, visible without tapping, expanding, or opening settings.
-* The word "glucose" appears in user-facing copy only inside this disclaimer.
+"ApetitScan estimates the carbohydrate load of a meal from a photo, shows how sure it is, and suggests realistic next steps."
 
 ## Approved Vocabulary
 Use these terms, and only these, for scan results:
-* Estimated carbohydrates: a range, always `X–Y g`.
-* Sugar Spoon Index: a range of spoons, always `X–Y spoons`, with a one-line note on what one spoon represents.
-* Meal Impact: Low / Moderate / High.
-* Estimate confidence: a percentage, with the breakdown labeled Food recognition, Portion, Nutrition data.
-* Portion: Small / Medium / Large.
-* Preparation: the seeded preparation labels (for example Boiled, Fried).
-* Verified entry: the food data row was hand-checked, shown with its source note.
-* Prepare / Adjust / Recover: the three Buffer Engine groups.
+* Estimated carbohydrate: always a range in grams.
+* Carb spoons: the unit of the SugarSpoonMeter. An abstract unit defined once in the backend (`SPOON_GRAMS`). Never described as teaspoons of sugar.
+* Estimated Meal Impact: Low, Moderate, High.
+* Confidence: High, Medium, Low, shown separately for Food, Portion, Preparation. Never a percentage.
+* Assumed and Confirmed: the status of every food, portion, and preparation.
+* Verified data and Estimated data: the source of the nutrition figures.
+* Buffer sections, as the user sees them: Before you cook, Before you eat, After you eat.
 
-API values are lowercase (`low`, `moderate`, `high`, `small`, `medium`, `large`) and map one-to-one to the labels above.
+Loading copy, exact: "Identifying foods..." then "Estimating carbohydrates..."
+
+## Required Disclaimer (EstimateDisclaimer, exact wording)
+"This is an estimate from a photo, not a blood glucose measurement. Carbohydrate figures are ranges based on the foods, portions and preparation shown here. Change an assumption and the estimate updates."
+
+It must be visible inside the same card as the Meal Impact result without any tap. Not behind an info icon, not in a tooltip, not in settings. Minimum 13px, readable contrast, visually quieter than the result but never tiny.
 
 ## Claims the API and Frontend Must Never Make or Imply
-Do not return, render, or structurally support any of the following:
-* That the app measures, predicts, or estimates blood glucose or "blood sugar", or that it predicts a "spike".
-* Any diagnosis, disease prediction, medical advice, or language implying it replaces a doctor or dietitian.
-* A single-number carbohydrate value, food weight, or palm-oil quantity presented as exact.
-* Calories, fat, or protein grams. The MVP shows carbohydrate ranges only.
-* A guaranteed or percentage effect from any suggestion ("drops your spike by 15%", "reduces sugar by half").
-* A confidence percentage shown without the estimate and range it belongs to, or presented as the accuracy of a glucose outcome.
-* That a food is "bad", "unhealthy", "unsafe", or that the user should not eat it. No "avoid", "don't eat", or "never eat".
-* "Replace the rice" (or any swap) for a meal the user said is already prepared.
-* Labels like "diabetic-friendly" or "sugar-free".
+* A blood glucose value, a glucose unit (mg/dL, mmol/L), a "reading", or a curve presented as the user's response.
+* A single fake-precise carbohydrate number. Ranges only, written "45 to 60 g", not "52.4 g".
+* Any accuracy or outcome percentage ("92% accurate", "lowers the spike by 15%").
+* Medical diagnosis, treatment advice, or the word "safe".
+* AI marketing labels ("AI-powered", "smart", "magic") and vague loading copy ("thinking", "processing").
+* Treating Estimated data with the certainty of Verified data.
 
-## Confidence Language
-* Shown as `Estimate confidence: NN%`. It is a score of how reliable the estimate is, not a probability that a health outcome will happen.
-* The breakdown (Food recognition, Portion, Nutrition data) is available on the result screen. When one step is the weakest, the copy says which one.
+## Buffer Language Rules
+* Phrase suggestions as options: "Consider...", "If you have...".
+* Follow the cooking state. Not cooked yet: portion, addition, and preparation options. Cooked, not eaten: portion and addition options only. Already eaten: light activity "where appropriate", and nothing about changing the meal.
+* Never say replace, swap, discard, skip, avoid, or "do not eat" for a meal that is already made or eaten.
+* No numeric outcome for any action.
+* Footer line under the actions: "General suggestions, not medical advice."
 
-## Asking Instead of Guessing (Copy Patterns)
-* Portion: "How big was the portion?" with Small / Medium / Large.
-* Preparation: "Was this fried or boiled?" as a short multiple choice, options taken from the seeded preparations for that food.
-* Unidentified dish: "I couldn't identify this dish. What's the main carbohydrate?" with the seeded main-carb list.
-* Meal state: "Has this meal already been prepared?" with Yes / Not yet.
-* Assumptions are disclosed in plain language next to the result, for example "Preparation not confirmed, assumed boiled. Tap to change." Every question and assumption leads to a correction the user can make.
+## Confidence Rules
+* Levels are High, Medium, Low for Food, Portion, Preparation.
+* Overall confidence is never higher than the weakest layer.
+* Medium or Low shows a one-line reason. Portion: "Portion size is estimated from a single photo." Preparation: "The photo does not clearly show how this was cooked." Food: "Some foods were hard to tell apart in the photo."
 
-## Buffer Engine Presentation
-* Grouped as Prepare, Adjust, Recover, ranked by feasibility, shown as suggestions, not rules.
-* Tone: practical and non-judgmental. Examples of acceptable copy: "Try a smaller serving of rice.", "Add vegetables or protein to the plate.", "A light walk after eating is an easy option.", "We'll keep this scan in your history so patterns are easy to spot later."
-* No numeric effect, no outcome promise, and no wording that implies the user did something wrong.
-* If the meal is already prepared, only Adjust and Recover groups are shown.
-
-## Meal Impact Presentation
-* Show the band, the confidence percentage, the total carbohydrate range, and the `drivers` list ("Why this rating") together.
-* The same components, judged with different preparation or portion, can and should produce a different impact. The UI never presents a fixed per-food verdict.
-* If the range straddles a band boundary, say so in one line rather than hiding it.
-
-## Frontend Labels (for backend awareness)
-Field names and returned values must let the frontend render every label above directly, without translation or guesswork. Expected fields: `total_carbs_g`, `sugar_spoons`, `meal_impact`, `confidence`, `drivers`, `assumptions`, `disclaimer`, and for each component `entry.verified` and `entry.source_note`. If a field name changes on the backend, the labels above must still be reachable without a rewrite.
-
-## Grep List for the Safety Pass
-Search all user-facing strings, prompt templates, and comments that may surface for: `safe`, `unsafe`, `healthy`, `unhealthy`, `bad food`, `avoid`, `don't eat`, `never eat`, `diabetic`, `diagnos`, `spike`, `guarantee`, `lower your blood`, `sugar-free`, `blood sugar`, `glucose`, `calorie`, and any `%` used outside the confidence figure. `glucose` is allowed only inside `DISCLAIMER_TEXT`. Anything else that matches is removed or rewritten.
+## Visual System
+Mobile-first consumer health utility. It should look like a product a startup could ship, not an AI concept.
+* Color: white and very light neutral backgrounds, near-black text, the existing blue as the only interaction color. Semantic accents (impact dot, Assumed/Confirmed) are muted and always paired with text.
+* Type: one sans family already in the project, weights 400, 500, 600. Scale: 28/32 result, 20/26 title, 16/24 body, 14/20 secondary, 13/18 disclaimer, 12/16 caption minimum.
+* Shape: 14px radius for controls and rows, 18px for containers, 1px borders, no shadows except a bottom sheet.
+* Layout: hierarchy from type, whitespace, and hairline dividers. Containers only where they improve hierarchy. No card inside a card.
+* Icons: Tabler Icons only (`@tabler/icons-react`). No emoji as icons, no second icon library. The spoon glyph in SugarSpoonMeter is an original SVG.
+* Motion: 150 to 200ms for selection and sheets only. Respect `prefers-reduced-motion`.
+* Never: gradient blobs, glow borders, glassmorphism, robot or sparkle imagery, giant percentages, decorative charts, fake clinical dashboards.
+* Mobile first: 44px minimum tap targets, primary actions in thumb reach, no horizontal overflow at 360px width, safe-area insets respected.

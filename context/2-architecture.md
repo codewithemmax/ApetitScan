@@ -81,9 +81,10 @@ Meal photo
 ## Required Endpoints
 * `POST /api/scan`: image in, identified components out (food, portion, preparation, per-step confidence), plus a `questions` list for anything uncertain. Writes a `scans` row for the authenticated user with `status` set to `needs_input` or `complete`.
 * `POST /api/estimate`: confirmed components in, carb range per component and total, Sugar Spoon range, Meal Impact, confidence breakdown, drivers, assumptions, and disclaimer out. Pure function over `food_nutrition`, no external calls. Updates the scan row.
-* `POST /api/buffer`: scan result plus `meal_prepared` in, ranked Prepare / Adjust / Recover actions out. Pure function, no external calls.
+* `POST /api/buffer`: scan result plus `meal_prepared` and optional `meal_eaten` in, ranked Prepare / Adjust / Recover actions out. Already-eaten meals receive Recover actions only. Pure function, no external calls.
 * `POST /api/correct`: a user correction in, stored in `scan_corrections`, and the estimate recomputed from the corrected components.
 * `GET /api/history`: the authenticated user's past scans, most recent first, with impact, spoon range, carb range, and timestamp.
+* `GET /api/history/:id`: returns the authenticated user's saved result as stored, without recomputation.
 * `DELETE /api/history/:id`: deletes one scan row, owned by the authenticated user only.
 
 Retired: `POST /api/match` and `POST /api/ask-cook` (allergen era). Remove the route code in Unit 1; the tables stay.

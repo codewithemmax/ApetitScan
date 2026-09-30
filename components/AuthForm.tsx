@@ -41,13 +41,13 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
     setLoading(false);
   }
 
-  const fieldClass = "w-full rounded-2xl border border-ink/15 bg-white/80 px-4 py-3.5 text-ink outline-none transition focus:border-moss focus:ring-4 focus:ring-moss/10";
+  const fieldClass = "min-h-12 w-full rounded-[14px] border border-line bg-white px-4 py-3 text-ink outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15";
 
   return <form onSubmit={submit} className="mt-8 space-y-5">
     {mode === "signup" && <label className="block"><span className="eyebrow mb-2 block text-ink/60">Display name</span><input autoComplete="name" required value={displayName} onChange={(event) => setDisplayName(event.target.value)} className={fieldClass} /></label>}
     <label className="block"><span className="eyebrow mb-2 block text-ink/60">Email address</span><input autoComplete="email" required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className={fieldClass} /></label>
     <label className="block"><span className="eyebrow mb-2 block text-ink/60">Password</span><input autoComplete={mode === "signup" ? "new-password" : "current-password"} required minLength={6} type="password" value={password} onChange={(event) => setPassword(event.target.value)} className={fieldClass} /></label>
-    {message && <p role="alert" className="rounded-2xl border border-coral/15 bg-[#fff0e9] p-4 text-sm leading-6 text-coral">{message}</p>}
-    <button disabled={loading} className="group flex w-full items-center justify-between rounded-full bg-plum px-6 py-4 text-sm font-bold text-paper transition hover:bg-ink disabled:cursor-wait disabled:opacity-60"><span>{loading ? "Please wait..." : mode === "signup" ? "Create your account" : "Welcome back"}</span><span aria-hidden="true" className="text-lg transition-transform group-hover:translate-x-1">↗</span></button>
+    {message && <p role="alert" className="rounded-[14px] border border-red-200 bg-red-50 p-4 text-sm leading-6 text-red-800">{message}</p>}
+    <button disabled={loading} className="group flex min-h-12 w-full items-center justify-between rounded-[14px] bg-primary px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:cursor-wait disabled:opacity-60"><span>{loading ? "Please wait..." : mode === "signup" ? "Create your account" : "Log in"}</span><span aria-hidden="true" className="text-lg transition-transform group-hover:translate-x-1">↗</span></button>
   </form>;
 }

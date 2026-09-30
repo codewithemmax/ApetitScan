@@ -1,5 +1,30 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AppHeader } from "../../components/AppHeader";
+import { AppIcon } from "../../components/AppIcon";
 import { createClient } from "../../lib/supabase/client";
-export default function ProfilePage() { const [email,setEmail]=useState(""); const [name,setName]=useState(""); useEffect(()=>{ void createClient().auth.getUser().then(({data})=>{setEmail(data.user?.email ?? ""); setName((data.user?.user_metadata.display_name as string | undefined) ?? "ApetitScan user");}); },[]); return <main className="page-shell min-h-screen px-5 py-6 md:px-8"><div className="mx-auto max-w-5xl"><AppHeader /><section className="mt-10 rounded-[2rem] bg-plum px-7 py-10 text-paper md:px-12 md:py-14"><p className="eyebrow text-citron">Your account</p><h1 className="display-face mt-4 text-5xl md:text-7xl">A place for<br/><em className="text-sky">your scans.</em></h1><p className="mt-5 max-w-lg text-sm leading-6 text-paper/70">Your meal estimates and scan history stay linked to this account.</p></section><section className="mt-8 rounded-[1.75rem] border border-ink/10 bg-white/75 p-6 md:p-8"><p className="eyebrow text-coral">Account details</p><dl className="mt-5 grid gap-5 sm:grid-cols-2"><div><dt className="text-xs uppercase tracking-wider text-ink/45">Display name</dt><dd className="mt-2 text-lg font-semibold">{name}</dd></div><div><dt className="text-xs uppercase tracking-wider text-ink/45">Email</dt><dd className="mt-2 text-lg font-semibold">{email}</dd></div></dl></section></div></main>; }
+export default function ProfilePage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  useEffect(() => {
+    void createClient().auth.getUser().then(({ data }) => {
+      if (!data.user) { router.replace("/login?next=%2Fprofile"); return; }
+      setEmail(data.user?.email ?? "");
+      setName((data.user?.user_metadata.display_name as string | undefined) ?? "ApetitScan user");
+    });
+  }, [router]);
+  return <main className="page-shell mx-auto max-w-5xl"><AppHeader/>
+    <section className="mx-auto max-w-2xl py-8 sm:py-12">
+      <p className="text-xs font-semibold uppercase tracking-[.12em] text-secondary">Your account</p>
+      <h1 className="mt-2 text-3xl font-semibold tracking-tight">Profile</h1>
+      <p className="mt-2 text-sm leading-6 text-secondary">Account details for your ApetitScan notebook.</p>
+      <div className="mt-6 divide-y divide-line border-y border-line bg-white px-4 sm:px-5">
+        <div className="flex items-center gap-4 py-5"><span className="grid h-11 w-11 place-items-center rounded-[14px] bg-blue-light text-primary"><AppIcon name="user" size={22}/></span><div><p className="text-xs font-semibold uppercase tracking-[.1em] text-secondary">Display name</p><p className="mt-1 text-base font-semibold">{name || "Loading…"}</p></div></div>
+        <div className="py-5"><p className="text-xs font-semibold uppercase tracking-[.1em] text-secondary">Email</p><p className="mt-1 break-all text-base font-semibold">{email || "Loading…"}</p></div>
+      </div>
+      <p className="mt-4 text-sm leading-5 text-secondary">Your scans are associated with this account. Sign out from the navigation when you are finished.</p>
+    </section>
+  </main>;
+}

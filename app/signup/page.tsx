@@ -1,9 +1,10 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { AuthForm } from "../../components/AuthForm";
 
 export default function SignupPage() {
-  return <main className="page-shell"><div className="mx-auto grid max-w-6xl overflow-hidden rounded-[2rem] border border-ink/10 bg-white/70 shadow-xl shadow-ink/5 md:min-h-[760px] md:grid-cols-[1fr_.9fr]">
-    <section className="paper-grid relative flex flex-col justify-between bg-plum p-7 text-paper md:p-12"><Link href="/" className="text-xl font-black tracking-[-.06em]">Apetit<span className="text-sky">Scan</span></Link><div className="my-16 max-w-lg"><p className="eyebrow text-sky">Start with what matters to you</p><h1 className="display-face mt-5 text-6xl leading-[.92] md:text-7xl">Make room<br/>for better<br/><em className="text-sky">questions.</em></h1><p className="mt-5 max-w-sm text-sm leading-6 text-white/60">Understand your meal, confirm what is uncertain, and keep useful scan notes.</p></div><p className="eyebrow text-white/35">A small lens on a rich food culture</p></section>
-    <section className="flex items-center p-7 md:p-14"><div className="w-full max-w-md"><p className="eyebrow text-coral">Join ApetitScan</p><h2 className="display-face mt-3 text-4xl">Create your account</h2><p className="mt-2 text-sm text-ink/55">A few details, then your own food notebook.</p><AuthForm mode="signup"/><p className="mt-7 text-sm text-ink/55">Already have an account? <Link href="/login" className="font-bold text-coral">Log in</Link></p></div></section>
-  </div></main>;
+  return <main className="page-shell">
+    <header className="mx-auto flex max-w-5xl items-center justify-between border-b border-line pb-4"><Link href="/" className="text-lg font-bold tracking-tight">Apetit<span className="text-primary">Scan</span></Link><Link href="/login" className="min-h-11 inline-flex items-center rounded-[14px] px-3 text-sm font-semibold text-secondary hover:bg-white">Log in</Link></header>
+    <section className="mx-auto mt-8 max-w-md rounded-[18px] border border-line bg-white p-5 sm:p-8"><p className="text-xs font-semibold uppercase tracking-[.12em] text-primary">Start your meal notes</p><h1 className="mt-2 text-2xl font-semibold tracking-tight">Create your account</h1><p className="mt-2 text-sm leading-5 text-secondary">Save scans and return to the details later.</p><Suspense><AuthForm mode="signup"/></Suspense><p className="mt-6 text-sm text-secondary">Already have an account? <Link href="/login" className="font-semibold text-primary">Log in</Link></p></section>
+  </main>;
 }

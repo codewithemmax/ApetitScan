@@ -237,5 +237,13 @@ export async function POST(request: Request) {
     .single();
   if (insertError || !scan) return failure("We couldn't save this scan. Please try again.", 500);
 
-  return NextResponse.json({ scan_id: scan.id, status, components, questions }, { status: 201 });
+  return NextResponse.json({
+    scan_id: scan.id,
+    status,
+    components,
+    questions,
+    food_options: foods.map((food) => food.name),
+    main_carbohydrate_options: foods.filter((food) => food.is_main_carb).map((food) => food.name),
+    preparation_options: Object.fromEntries(foods.map((food) => [food.name, food.preparations])),
+  }, { status: 201 });
 }

@@ -1,9 +1,10 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { AuthForm } from "../../components/AuthForm";
 
 export default function LoginPage() {
-  return <main className="page-shell"><div className="mx-auto grid max-w-6xl overflow-hidden rounded-[2rem] border border-ink/10 bg-white/70 shadow-xl shadow-ink/5 md:min-h-[720px] md:grid-cols-[1fr_.9fr]">
-    <section className="paper-grid relative flex flex-col justify-between bg-ice p-7 md:p-12"><Link href="/" className="text-xl font-black tracking-[-.06em]">Apetit<span className="text-coral">Scan</span></Link><div className="my-16 max-w-lg"><p className="eyebrow text-ink/50">A field guide to your plate</p><h1 className="display-face mt-5 text-6xl leading-[.92] md:text-7xl">Welcome back<br/><em>to the table.</em></h1><p className="mt-5 max-w-sm text-sm leading-6 text-ink/65">Pick up where you left off. Your questions and dish notes are waiting.</p></div><p className="eyebrow text-ink/40">ApetitScan · Nigerian food, understood together</p></section>
-    <section className="flex items-center p-7 md:p-14"><div className="w-full max-w-md"><p className="eyebrow text-coral">Your notebook</p><h2 className="display-face mt-3 text-4xl">Log in</h2><p className="mt-2 text-sm text-ink/55">Use the email and password linked to your account.</p><AuthForm mode="login"/><p className="mt-7 text-sm text-ink/55">New to ApetitScan? <Link href="/signup" className="font-bold text-coral">Create an account</Link></p></div></section>
-  </div></main>;
+  return <main className="page-shell">
+    <header className="mx-auto flex max-w-5xl items-center justify-between border-b border-line pb-4"><Link href="/" className="text-lg font-bold tracking-tight">Apetit<span className="text-primary">Scan</span></Link><Link href="/signup" className="min-h-11 inline-flex items-center rounded-[14px] px-3 text-sm font-semibold text-secondary hover:bg-white">Create account</Link></header>
+    <section className="mx-auto mt-8 max-w-md rounded-[18px] border border-line bg-white p-5 sm:p-8"><p className="text-xs font-semibold uppercase tracking-[.12em] text-primary">Your meal notes</p><h1 className="mt-2 text-2xl font-semibold tracking-tight">Welcome back</h1><p className="mt-2 text-sm leading-5 text-secondary">Log in to review and save your meal scans.</p><Suspense><AuthForm mode="login"/></Suspense><p className="mt-6 text-sm text-secondary">New to ApetitScan? <Link href="/signup" className="font-semibold text-primary">Create an account</Link></p></section>
+  </main>;
 }

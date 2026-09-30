@@ -12,11 +12,22 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function actionsFor(mealPrepared: boolean, components: unknown[]): BufferAction[] {
+function actionsFor(mealPrepared: boolean, mealEaten: boolean, components: unknown[]): BufferAction[] {
   const actions: Omit<BufferAction, "rank">[] = [];
   const mainCarbohydrate = components.find((component) => isRecord(component) && component.category === "carb_staple" && typeof component.food === "string");
   const staple = isRecord(mainCarbohydrate) && typeof mainCarbohydrate.food === "string" ? mainCarbohydrate.food : "main carbohydrate";
-  if (!mealPrepared) {
+  if (mealEaten) {
+    actions.push({
+      group: "Recover",
+      title: "Consider light activity, where appropriate",
+      description: "A gentle walk or other comfortable movement is optional if it suits you.",
+    });
+    actions.push({
+      group: "Recover",
+      title: "Keep this meal in mind next time",
+      description: "Use the meal details as a reference when planning a future serving.",
+    });
+  } else if (!mealPrepared) {
     actions.push({
       group: "Prepare",
       title: "Choose a portion that feels comfortable",
@@ -29,19 +40,19 @@ function actionsFor(mealPrepared: boolean, components: unknown[]): BufferAction[
       description: `If ${staple} is on the plate, you can set some aside and keep the rest of the meal as prepared.`,
     });
   }
-  actions.push({
+  if (!mealEaten) actions.push({
     group: "Adjust",
     title: "Add vegetables or protein if available",
     description: "Add them alongside what is already made, if they are available and suit the meal.",
   });
-  if (!mealPrepared) {
+  if (!mealPrepared && !mealEaten) {
     actions.push({
       group: "Prepare",
       title: "Choose how to prepare the meal",
       description: "If cooking has not started, consider a boiled, steamed, or grilled preparation where it fits the dish.",
     });
   }
-  actions.push(
+  if (!mealEaten) actions.push(
     {
       group: "Recover",
       title: "Consider light activity after eating",
@@ -69,8 +80,9 @@ export async function POST(request: Request) {
   }
   if (!isRecord(body) || typeof body.scan_id !== "string" ||
     !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.scan_id) ||
-    typeof body.meal_prepared !== "boolean") {
-    return NextResponse.json({ error: "The scan ID or meal_prepared value is invalid." }, { status: 400 });
+    typeof body.meal_prepared !== "boolean" || (body.meal_eaten !== undefined && typeof body.meal_eaten !== "boolean") ||
+    (body.meal_eaten === true && body.meal_prepared !== true)) {
+    return NextResponse.json({ error: "The scan ID or meal state is invalid." }, { status: 400 });
   }
 
   const { data: scan, error: scanError } = await supabase.from("scans")
@@ -84,12 +96,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Estimate this meal before requesting suggestions." }, { status: 409 });
   }
 
-  const actions = actionsFor(body.meal_prepared, scan.components as unknown[]);
+  const mealEaten = body.meal_eaten === true;
+  const actions = actionsFor(body.meal_prepared, mealEaten, scan.components as unknown[]);
   const { data: updated, error: updateError } = await supabase.from("scans").update({
     meal_prepared: body.meal_prepared,
     buffer_actions: actions,
   }).eq("id", body.scan_id).eq("user_id", user.id).select("id").maybeSingle();
   if (updateError || !updated) return NextResponse.json({ error: "We could not save these meal suggestions." }, { status: 500 });
 
-  return NextResponse.json({ scan_id: body.scan_id, meal_prepared: body.meal_prepared, actions });
+  return NextResponse.json({ scan_id: body.scan_id, meal_prepared: body.meal_prepared, meal_eaten: mealEaten, actions });
 }

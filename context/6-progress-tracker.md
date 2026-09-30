@@ -37,8 +37,9 @@ Update this file after every meaningful implementation change.
 * Unit 8: verify both demo estimates, disclaimer presence, missing-row ask behavior, and owner-only scan updates.
 * Unit 9 code is implemented; verify Buffer feasibility/gating, recalculation after correction, and correction-row owner scoping manually.
 * Unit 10 code is implemented; verify newest-first history, null-safe legacy rows, and owner-only deletion manually.
-* Units 11-12: scan flow UI, then home, profile, and history rework.
-* Units 13-14: safety and credibility pass, deploy, demo rehearsal.
+* Units 11-12 code is implemented; phone-sized visual and end-to-end acceptance remain pending.
+* Unit 13: static safety/key review and mocked provider-fallback checks passed; runtime two-user RLS verification and a completed production bundle audit remain pending.
+* Unit 14: deployment, demo rehearsal, and documentation pass.
 
 ## Open Questions
 * Supabase project credentials, and whether email confirmation is enabled on the deployed project.
@@ -80,3 +81,5 @@ Update this file after every meaningful implementation change.
 * 2026-09-29 Unit 8: implemented authenticated estimate requests bound to the caller's saved component IDs, verified-row-only nutrition lookups, confidence/impact/spoon calculations, clarification behavior for missing or uncertain inputs, disclaimer inclusion, and owner-scoped scan updates. Documented the JSON contract and manual acceptance checks in `API.md`; acceptance remains pending.
 * 2026-09-29 Unit 9: added authenticated Buffer and correction endpoints. Buffer actions are feasibility-ranked, saved with `meal_prepared`, and omit Prepare actions for already-prepared meals. Corrections validate against verified foods and nutrition preparations, write to `scan_corrections` plus the owner's scan only, and recalculate through the shared estimate builder. Added API contracts and manual acceptance checks; runtime and database acceptance remain pending.
 * 2026-09-29 Unit 10: updated authenticated history to return owner-scoped scans newest first with Meal Impact, carbohydrate and Sugar Spoon ranges, status, and timestamp; older rows with absent/invalid estimate bounds safely return null ranges. Tightened owner-only deletion to return 404 for missing or non-owned scans while retaining RLS enforcement. Documented response shapes and manual acceptance steps; database acceptance remains pending.
+* 2026-09-30 Units 11-12: implemented scan flow and shared responsive screens, palette, saved history detail, and exact result disclaimer. Phone-sized visual and end-to-end acceptance remain pending.
+* 2026-09-30 Unit 13 pass: scanned app/components/lib for prohibited safety and credibility wording; remaining matches are the exact approved disclaimer, required "not medical advice" footer, code identifiers, or safe-area CSS. Confirmed the active AI prompt is identification-only and provider keys are only read from server-side environment names; public env references are the approved Supabase URL/anon key. Mocked Gemini 429 -> Groq success and both-provider failure paths pass. Fixed Home disclaimer gating for impact/range data. RLS policies and owner filters were reviewed, but cross-user database behavior is not runtime-verified because no Supabase CLI/test identities are available. No production client JS bundles were generated for bundle-level secret scanning.
