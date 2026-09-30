@@ -83,8 +83,8 @@ export function SugarSpoonMeter({ range }: { range: DisplayRange }) {
 export function MealImpactCard({ result, onEdit }: { result: MealResultData; onEdit?: () => void }) {
   const hasRange = result.total_carbs_g !== null && result.sugar_spoons !== null;
   return <section aria-labelledby="meal-impact-title" className="rounded-[18px] border border-line bg-white p-5 sm:p-6">
-    <div className="flex items-start justify-between gap-4">
-      <div><p className="text-xs font-semibold uppercase tracking-[.12em] text-secondary">Meal Impact</p><h2 id="meal-impact-title" className="mt-1 text-2xl font-semibold tracking-tight">{result.meal_impact ? result.meal_impact[0].toUpperCase() + result.meal_impact.slice(1) : "Estimate needs a check"}</h2></div>
+    <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-[.12em] text-secondary">Meal Impact</p><h2 id="meal-impact-title" className="mt-1 text-2xl font-semibold tracking-tight">{result.meal_impact ? result.meal_impact[0].toUpperCase() + result.meal_impact.slice(1) : "Estimate needs a check"}</h2></div>
       {onEdit && <button type="button" onClick={onEdit} className="inline-flex min-h-11 items-center gap-2 rounded-[14px] border border-line px-3 text-sm font-semibold text-ink hover:bg-background"><AppIcon name="edit" size={17}/>Edit details</button>}
     </div>
 

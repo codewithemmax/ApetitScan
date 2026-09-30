@@ -26,7 +26,8 @@ Millions of people make daily food decisions with no easy way to understand the 
 | **Act** | Buffer Engine suggests Prepare / Adjust / Recover actions based on meal state |
 | **Correct** | Every assumption is editable; corrections are saved with the scan |
 
-The app never gives a single carbohydrate number. Every result is a range. Every uncertain step is disclosed or asked about. The disclaimer is always on screen next to the result — not behind a tap.
+The app never gives a single carbohydrate number. Every result is a range. Every uncertain step is disclosed or asked about. The disclaimer is always on screen next to the result — not behind a
+ tap.
 
 ---
 

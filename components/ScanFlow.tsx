@@ -95,8 +95,8 @@ export function PhotoCapture({
     </div>
     <input ref={cameraInput} className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={(event) => accept(event.target.files?.[0])}/>
     <input ref={uploadInput} className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => accept(event.target.files?.[0])}/>
-    <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">
-      <button type="button" disabled={disabled} onClick={() => cameraInput.current?.click()} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[14px] bg-primary px-4 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-60"><AppIcon name="camera" size={18}/>{image ? "Take another photo" : "Take a meal photo"}</button>
+    <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+      <button type="button" disabled={disabled} onClick={() => cameraInput.current?.click()} className="inline-flex min-w-0 min-h-12 items-center justify-center gap-2 rounded-[14px] bg-primary px-3 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-60 sm:px-4"><AppIcon name="camera" size={18}/>{image ? "Take another photo" : "Take a meal photo"}</button>
       <button type="button" disabled={disabled} aria-label="Upload an existing meal photo" onClick={() => uploadInput.current?.click()} className="grid min-h-12 min-w-12 place-items-center rounded-[14px] border border-line bg-white text-ink hover:bg-background disabled:opacity-60"><AppIcon name="image" size={20}/></button>
     </div>
   </section>;
